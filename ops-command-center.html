@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MSS Ops Command Center</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #F8FAFC; color: #0F172A; }
+  #root { min-height: 100vh; }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+  table { border-collapse: collapse; width: 100%; }
+  button { cursor: pointer; }
+  button:hover { opacity: 0.85; }
+  tr:hover { background: #FAFBFD !important; }
+  a { color: #6366F1; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useMemo } = React;
+
+// ── TEAM DATA ────────────────────────────────────────────────────────────
+const WEEKLY_TEAM_COST = 2800; // GK+Shika $2200 + Suman $600
+
+// ── PROJECT DATA ─────────────────────────────────────────────────────────
+const INITIAL_PROJECTS = [
+  { id:1, name:"Aurora Health — Marketing Hub Pro", client:"Aurora Health", tcv:32000, status:"delivered", assignedTeam:"GK + Shika", upfrontInvoiced:true, upfrontPaid:true, deliveryInvoiced:true, deliveryPaid:true, lldProgress:100, signedDate:"2026-01-05", deliveryDate:"2026-01-22", slackChannel:"mss-aurora-health-gk", notes:"Clean delivery. Single brand, standard Marketing Hub." },
+  { id:2, name:"Nexus Group — Enterprise CRM + Ops", client:"Nexus Group", tcv:58000, status:"delivered", assignedTeam:"GK + Shika", upfrontInvoiced:true, upfrontPaid:true, deliveryInvoiced:true, deliveryPaid:false, lldProgress:100, signedDate:"2025-12-15", deliveryDate:"2026-02-10", slackChannel:"mss-nexus-enterprise-gk", notes:"Multi-brand, custom objects. Delivery invoice pending." },
+  { id:3, name:"Tara Treasures — Sales + Service Hub", client:"Tara Treasures", tcv:28000, status:"in_progress", assignedTeam:"GK + Shika", upfrontInvoiced:true, upfrontPaid:true, deliveryInvoiced:false, deliveryPaid:false, lldProgress:72, signedDate:"2026-02-03", deliveryDate:null, slackChannel:"mss-tara-treasures-gk", notes:"E-commerce. Shopify integration." },
+  { id:4, name:"Pinnacle Finance — CRM Migration", client:"Pinnacle Finance", tcv:44000, status:"in_progress", assignedTeam:"GK + Shika", upfrontInvoiced:true, upfrontPaid:true, deliveryInvoiced:false, deliveryPaid:false, lldProgress:55, signedDate:"2026-02-05", deliveryDate:null, slackChannel:"mss-pinnacle-crm-gk", notes:"Salesforce migration. 25k contacts. Complex RBAC." },
+  { id:5, name:"Meridian Legal — Marketing Hub Starter", client:"Meridian Legal", tcv:14000, status:"in_progress", assignedTeam:"Suman", upfrontInvoiced:true, upfrontPaid:true, deliveryInvoiced:false, deliveryPaid:false, lldProgress:40, signedDate:"2026-02-10", deliveryDate:null, slackChannel:"mss-meridian-legal-suman", notes:"Standard setup. Good training project for Suman." },
+  { id:6, name:"Forge Manufacturing — Ops Hub + Integrations", client:"Forge Manufacturing", tcv:52000, status:"in_progress", assignedTeam:"GK + Shika", upfrontInvoiced:true, upfrontPaid:true, deliveryInvoiced:false, deliveryPaid:false, lldProgress:30, signedDate:"2026-02-12", deliveryDate:null, slackChannel:"mss-forge-ops-gk", notes:"Heavy integration work. Xero + custom ERP." },
+  { id:7, name:"Catalyst Digital — Sales Hub Pro", client:"Catalyst Digital", tcv:22000, status:"in_progress", assignedTeam:"GK + Shika", upfrontInvoiced:true, upfrontPaid:true, deliveryInvoiced:false, deliveryPaid:false, lldProgress:85, signedDate:"2026-01-28", deliveryDate:null, slackChannel:"mss-catalyst-sales-gk", notes:"Nearly done. UAT scheduled this week." },
+  { id:8, name:"Brightpath Education — CMS + Marketing", client:"Brightpath Education", tcv:36000, status:"in_progress", assignedTeam:"GK + Shika", upfrontInvoiced:true, upfrontPaid:true, deliveryInvoiced:false, deliveryPaid:false, lldProgress:20, signedDate:"2026-02-17", deliveryDate:null, slackChannel:"mss-brightpath-edu-gk", notes:"CMS Hub + Marketing Hub. Multi-campus." },
+  { id:9, name:"Vertex Consulting — Full Stack", client:"Vertex Consulting", tcv:48000, status:"setup", assignedTeam:"", upfrontInvoiced:true, upfrontPaid:true, deliveryInvoiced:false, deliveryPaid:false, lldProgress:0, signedDate:"2026-02-20", deliveryDate:null, slackChannel:"", notes:"Just signed. Kickoff call being booked." },
+  { id:10, name:"Horizon Wellness — Sales Hub Starter", client:"Horizon Wellness", tcv:12000, status:"setup", assignedTeam:"", upfrontInvoiced:false, upfrontPaid:false, deliveryInvoiced:false, deliveryPaid:false, lldProgress:0, signedDate:"2026-02-21", deliveryDate:null, slackChannel:"", notes:"Small deal. Good quick win for Suman." },
+  { id:11, name:"Coastal Properties — CRM + Service", client:"Coastal Properties", tcv:34000, status:"setup", assignedTeam:"", upfrontInvoiced:false, upfrontPaid:false, deliveryInvoiced:false, deliveryPaid:false, lldProgress:0, signedDate:"2026-02-22", deliveryDate:null, slackChannel:"", notes:"Real estate. Property management integration." },
+  { id:12, name:"Summit Retail — Enterprise Implementation", client:"Summit Retail", tcv:72000, status:"pipeline", assignedTeam:"", upfrontInvoiced:false, upfrontPaid:false, deliveryInvoiced:false, deliveryPaid:false, lldProgress:0, signedDate:null, deliveryDate:null, slackChannel:"", notes:"Big one. Multi-brand, multi-region. Duncan closing." },
+  { id:13, name:"GreenLeaf — Marketing Hub", client:"GreenLeaf", tcv:18000, status:"pipeline", assignedTeam:"", upfrontInvoiced:false, upfrontPaid:false, deliveryInvoiced:false, deliveryPaid:false, lldProgress:0, signedDate:null, deliveryDate:null, slackChannel:"", notes:"Standard. Waiting on quote approval." },
+];
+
+const STATUS_ORDER = ["pipeline","setup","in_progress","delivered"];
+const STATUS_LABELS = { pipeline:"Pipeline", setup:"Setup / Kickoff", in_progress:"In Delivery", delivered:"Delivered" };
+const STATUS_COLORS = {
+  pipeline:{ bg:"#FEF3C7", text:"#92400E", border:"#F59E0B" },
+  setup:{ bg:"#DBEAFE", text:"#1E40AF", border:"#3B82F6" },
+  in_progress:{ bg:"#D1FAE5", text:"#065F46", border:"#10B981" },
+  delivered:{ bg:"#E0E7FF", text:"#3730A3", border:"#6366F1" },
+};
+
+const fmt = n => "$" + n.toLocaleString("en-AU",{minimumFractionDigits:0});
+
+// ── Small Components ─────────────────────────────────────────────────────
+
+function KPI({label,value,sub,color="#6366F1",alert:a}) {
+  return React.createElement("div",{style:{background:"#fff",borderRadius:12,padding:"18px 22px",flex:1,minWidth:170,boxShadow:"0 1px 3px rgba(0,0,0,0.06)",borderTop:`3px solid ${color}`,position:"relative"}},
+    a && React.createElement("div",{style:{position:"absolute",top:8,right:12,width:8,height:8,borderRadius:"50%",background:"#EF4444",animation:"pulse 2s infinite"}}),
+    React.createElement("div",{style:{fontSize:12,color:"#64748B",fontWeight:500,marginBottom:4}},label),
+    React.createElement("div",{style:{fontSize:26,fontWeight:700,color:"#0F172A",lineHeight:1.2}},value),
+    sub && React.createElement("div",{style:{fontSize:11,color:"#94A3B8",marginTop:4}},sub)
+  );
+}
+
+function StatusBadge({status}) {
+  const c = STATUS_COLORS[status];
+  return React.createElement("span",{style:{display:"inline-block",padding:"3px 10px",borderRadius:999,fontSize:11,fontWeight:600,background:c.bg,color:c.text,border:`1px solid ${c.border}`}},STATUS_LABELS[status]);
+}
+
+function ProgressBar({value,height=6}) {
+  const color = value>=80?"#10B981":value>=50?"#F59E0B":value>=20?"#3B82F6":"#CBD5E1";
+  return React.createElement("div",{style:{background:"#F1F5F9",borderRadius:99,height,overflow:"hidden",width:"100%"}},
+    React.createElement("div",{style:{width:`${Math.min(value,100)}%`,height:"100%",background:color,borderRadius:99,transition:"width 0.3s"}})
+  );
+}
+
+function PayDot({done,label}) {
+  return React.createElement("span",{style:{display:"inline-flex",alignItems:"center",gap:4,fontSize:11,color:done?"#059669":"#DC2626"}},
+    React.createElement("span",{style:{width:7,height:7,borderRadius:"50%",background:done?"#10B981":"#EF4444",display:"inline-block"}}),
+    label
+  );
+}
+
+function ActionBtn({label,borderColor,bgColor,textColor,onClick}) {
+  return React.createElement("button",{onClick,style:{padding:"5px 12px",borderRadius:6,border:`1px solid ${borderColor}`,background:bgColor,color:textColor,fontSize:11,fontWeight:600,cursor:"pointer"}},label);
+}
+
+// ── Project Row ──────────────────────────────────────────────────────────
+
+function ProjectRow({project:p, onUpdate, expanded, onToggle}) {
+  const cut = p.tcv * 0.25;
+  const up = cut * 0.5;
+  const del = cut * 0.5;
+
+  const mainRow = React.createElement("tr",{onClick:onToggle,style:{cursor:"pointer",background:expanded?"#F8FAFC":"#fff",borderBottom:"1px solid #F1F5F9",transition:"background 0.15s"}},
+    React.createElement("td",{style:{padding:"10px 14px",maxWidth:220}},
+      React.createElement("div",{style:{fontWeight:600,fontSize:13,color:"#0F172A"}},p.client),
+      React.createElement("div",{style:{fontSize:11,color:"#94A3B8"}},p.name.replace(p.client+" — ",""))
+    ),
+    React.createElement("td",{style:{padding:"10px 14px"}},React.createElement(StatusBadge,{status:p.status})),
+    React.createElement("td",{style:{padding:"10px 14px",fontWeight:600,fontSize:13}},fmt(p.tcv)),
+    React.createElement("td",{style:{padding:"10px 14px",fontWeight:600,fontSize:13,color:"#6366F1"}},fmt(cut)),
+    React.createElement("td",{style:{padding:"10px 14px"}},
+      React.createElement("div",{style:{display:"flex",flexDirection:"column",gap:2}},
+        React.createElement(PayDot,{done:p.upfrontPaid,label:`50% up ${fmt(up)}`}),
+        React.createElement(PayDot,{done:p.deliveryPaid,label:`50% del ${fmt(del)}`})
+      )
+    ),
+    React.createElement("td",{style:{padding:"10px 14px",minWidth:90}},
+      (p.status==="in_progress"||p.status==="delivered") ?
+        React.createElement("div",{style:{display:"flex",alignItems:"center",gap:6}},
+          React.createElement(ProgressBar,{value:p.lldProgress}),
+          React.createElement("span",{style:{fontSize:11,color:"#64748B",fontWeight:600,minWidth:28}},p.lldProgress+"%")
+        ) : React.createElement("span",{style:{fontSize:11,color:"#94A3B8"}},"—")
+    ),
+    React.createElement("td",{style:{padding:"10px 14px",fontSize:12,color:p.assignedTeam?"#334155":"#DC2626",fontWeight:p.assignedTeam?400:600}},p.assignedTeam||"Unassigned"),
+    React.createElement("td",{style:{padding:"10px 6px",fontSize:14,color:"#94A3B8"}},expanded?"▾":"▸")
+  );
+
+  if (!expanded) return mainRow;
+
+  const actions = [];
+  const ab = (label,bc,bg,tc,upd) => actions.push(React.createElement(ActionBtn,{key:label,label,borderColor:bc,bgColor:bg,textColor:tc,onClick:e=>{e.stopPropagation();onUpdate(p.id,upd);}}));
+
+  if (p.status==="pipeline") ab("Deal Signed","#3B82F6","#DBEAFE","#1D4ED8",{status:"setup"});
+  if (p.status==="setup"&&!p.upfrontInvoiced) ab("Mark Invoiced","#F59E0B","#FEF3C7","#92400E",{upfrontInvoiced:true});
+  if (p.upfrontInvoiced&&!p.upfrontPaid) ab("Upfront Paid","#10B981","#D1FAE5","#065F46",{upfrontPaid:true});
+  if (p.status==="setup") ab("Start Delivery","#10B981","#D1FAE5","#065F46",{status:"in_progress"});
+  if (p.status==="in_progress"&&p.lldProgress>=85) ab("Mark Delivered","#6366F1","#E0E7FF","#4338CA",{status:"delivered",lldProgress:100,deliveryDate:new Date().toISOString().split("T")[0]});
+  if (p.status==="delivered"&&!p.deliveryInvoiced) ab("Invoice Delivery","#F59E0B","#FEF3C7","#92400E",{deliveryInvoiced:true});
+  if (p.deliveryInvoiced&&!p.deliveryPaid) ab("Delivery Paid","#10B981","#D1FAE5","#065F46",{deliveryPaid:true});
+
+  const detail = React.createElement("tr",{key:p.id+"_detail"},
+    React.createElement("td",{colSpan:8,style:{padding:0,background:"#F8FAFC"}},
+      React.createElement("div",{style:{padding:"14px 20px",display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:14}},
+        React.createElement("div",null,
+          React.createElement("div",{style:{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:4}},"Details"),
+          React.createElement("div",{style:{fontSize:12,color:"#334155"}},"Signed: "+(p.signedDate||"—")),
+          React.createElement("div",{style:{fontSize:12,color:"#334155"}},"Delivered: "+(p.deliveryDate||"—")),
+          p.slackChannel && React.createElement("div",{style:{fontSize:12,color:"#6366F1"}},"#"+p.slackChannel)
+        ),
+        React.createElement("div",null,
+          React.createElement("div",{style:{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:4}},"Notes"),
+          React.createElement("div",{style:{fontSize:12,color:"#334155"}},p.notes)
+        ),
+        React.createElement("div",null,
+          React.createElement("div",{style:{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:4}},"Actions"),
+          React.createElement("div",{style:{display:"flex",gap:6,flexWrap:"wrap"}},...actions)
+        )
+      )
+    )
+  );
+
+  return React.createElement(React.Fragment,null,mainRow,detail);
+}
+
+// ── Capacity Card ────────────────────────────────────────────────────────
+
+function CapacityCard({name,role,projects,maxProjects,weeklyCost,speed,note}) {
+  const active = projects.filter(p=>p.assignedTeam===name&&(p.status==="in_progress"||p.status==="setup")).length;
+  const util = Math.round((active/maxProjects)*100);
+  const color = util>=85?"#EF4444":util>=60?"#F59E0B":"#10B981";
+  const avail = maxProjects-active;
+
+  return React.createElement("div",{style:{background:"#fff",borderRadius:12,padding:18,boxShadow:"0 1px 3px rgba(0,0,0,0.06)",borderLeft:`4px solid ${color}`,flex:1,minWidth:240}},
+    React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"start",marginBottom:10}},
+      React.createElement("div",null,
+        React.createElement("div",{style:{fontWeight:700,fontSize:15,color:"#0F172A"}},name),
+        React.createElement("div",{style:{fontSize:11,color:"#64748B"}},role)
+      ),
+      React.createElement("div",{style:{background:color+"18",color,padding:"2px 8px",borderRadius:999,fontSize:11,fontWeight:700}},util+"%")
+    ),
+    React.createElement("div",{style:{fontSize:12,color:"#334155",marginBottom:4}},
+      active+" active / "+maxProjects+" max · ",
+      React.createElement("span",{style:{color:avail>0?"#10B981":"#EF4444",fontWeight:600}},avail+" slots open")
+    ),
+    React.createElement("div",{style:{fontSize:11,color:"#64748B",marginBottom:6}},fmt(weeklyCost)+"/wk AUD · "+speed),
+    React.createElement(ProgressBar,{value:util,height:4}),
+    React.createElement("div",{style:{fontSize:11,color:"#94A3B8",marginTop:8,fontStyle:"italic"}},note)
+  );
+}
+
+// ── MAIN DASHBOARD ───────────────────────────────────────────────────────
+
+function Dashboard() {
+  const [projects, setProjects] = useState(INITIAL_PROJECTS);
+  const [expandedId, setExpandedId] = useState(null);
+  const [view, setView] = useState("all");
+  const [tab, setTab] = useState("projects");
+
+  const update = (id, changes) => setProjects(ps => ps.map(p => p.id===id ? {...p,...changes} : p));
+
+  const stats = useMemo(() => {
+    const totalTCV = projects.reduce((s,p)=>s+p.tcv,0);
+    const nickTotal = totalTCV*0.25;
+    const collected = projects.reduce((s,p)=>{
+      let c=0; if(p.upfrontPaid) c+=p.tcv*0.125; if(p.deliveryPaid) c+=p.tcv*0.125; return s+c;
+    },0);
+    const outstanding = nickTotal-collected;
+    const invoiced = projects.reduce((s,p)=>{
+      let c=0; if(p.upfrontInvoiced&&!p.upfrontPaid) c+=p.tcv*0.125; if(p.deliveryInvoiced&&!p.deliveryPaid) c+=p.tcv*0.125; return s+c;
+    },0);
+    const byStatus = {};
+    STATUS_ORDER.forEach(s=>{
+      const ps=projects.filter(p=>p.status===s);
+      byStatus[s]={count:ps.length,tcv:ps.reduce((sum,p)=>sum+p.tcv,0)};
+    });
+    return {totalTCV,nickTotal,collected,outstanding,invoiced,byStatus};
+  },[projects]);
+
+  const filtered = useMemo(()=>{
+    let list=[...projects];
+    if(view!=="all") list=list.filter(p=>p.status===view);
+    list.sort((a,b)=>STATUS_ORDER.indexOf(a.status)-STATUS_ORDER.indexOf(b.status));
+    return list;
+  },[projects,view]);
+
+  // Invoice alert
+  const needsUpfront = projects.filter(p=>(p.status==="setup"||p.status==="in_progress")&&!p.upfrontInvoiced);
+  const needsDelivery = projects.filter(p=>p.status==="delivered"&&!p.deliveryInvoiced);
+  const invoiceTotal = needsUpfront.reduce((s,p)=>s+p.tcv*0.125,0)+needsDelivery.reduce((s,p)=>s+p.tcv*0.125,0);
+  const hasInvoiceAlert = needsUpfront.length+needsDelivery.length>0;
+
+  const tabBtn = (key,label) => React.createElement("button",{onClick:()=>setTab(key),style:{padding:"8px 20px",borderRadius:8,border:"none",fontSize:13,fontWeight:600,background:tab===key?"#6366F1":"transparent",color:tab===key?"#fff":"#64748B",cursor:"pointer"}},label);
+
+  const filterBtn = (key,label,count) => {
+    const active=view===key;
+    const sc=STATUS_COLORS[key]||{bg:"#EEF2FF",text:"#4338CA",border:"#6366F1"};
+    return React.createElement("button",{key,onClick:()=>setView(view===key?"all":key),style:{padding:"6px 14px",borderRadius:6,border:`1px solid ${active?sc.border:"#E2E8F0"}`,background:active?sc.bg:"#fff",color:active?sc.text:"#64748B",fontSize:12,fontWeight:600,cursor:"pointer"}},label+" ("+count+")");
+  };
+
+  return React.createElement("div",{style:{padding:"24px 32px",maxWidth:1400,margin:"0 auto"}},
+
+    // Header
+    React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:24,flexWrap:"wrap",gap:12}},
+      React.createElement("div",null,
+        React.createElement("h1",{style:{fontSize:26,fontWeight:800,color:"#0F172A"}},"MSS Ops Command Center"),
+        React.createElement("p",{style:{fontSize:13,color:"#64748B",marginTop:2}},"MyScale Solutions · "+projects.length+" projects · "+fmt(stats.totalTCV)+" total pipeline")
+      ),
+      React.createElement("div",{style:{display:"flex",gap:4,background:"#F1F5F9",borderRadius:10,padding:4}},
+        tabBtn("projects","Projects"),
+        tabBtn("revenue","Revenue"),
+        tabBtn("capacity","Capacity")
+      )
+    ),
+
+    // KPIs
+    React.createElement("div",{style:{display:"flex",gap:14,marginBottom:20,flexWrap:"wrap"}},
+      React.createElement(KPI,{label:"Your Total (25%)",value:fmt(stats.nickTotal),sub:"from "+fmt(stats.totalTCV)+" TCV",color:"#6366F1"}),
+      React.createElement(KPI,{label:"Collected",value:fmt(stats.collected),sub:Math.round(stats.collected/stats.nickTotal*100)+"% of total",color:"#10B981"}),
+      React.createElement(KPI,{label:"Outstanding",value:fmt(stats.outstanding),sub:fmt(stats.invoiced)+" invoiced, awaiting",color:"#F59E0B",alert:stats.outstanding>20000}),
+      React.createElement(KPI,{label:"Weekly Team Cost",value:fmt(WEEKLY_TEAM_COST),sub:"GK+Shika $2.2k + Suman $600",color:"#3B82F6"}),
+      React.createElement(KPI,{label:"Weekly Revenue",value:"~"+fmt(9000),sub:"Current average pace",color:"#10B981"})
+    ),
+
+    // Invoice Alert
+    hasInvoiceAlert && React.createElement("div",{style:{background:invoiceTotal>=10000?"#FEE2E2":"#FEF3C7",border:`1px solid ${invoiceTotal>=10000?"#EF4444":"#F59E0B"}`,borderRadius:10,padding:"14px 20px",marginBottom:20}},
+      React.createElement("div",{style:{fontWeight:700,fontSize:14,color:invoiceTotal>=10000?"#991B1B":"#92400E",marginBottom:4}},
+        invoiceTotal>=10000?"⚡ Invoice Now — Over $10k threshold":"📋 Invoice Queue — Ready for Thu/Fri batch"
+      ),
+      React.createElement("div",{style:{fontSize:13,color:"#334155"}},
+        (needsUpfront.length+needsDelivery.length)+" project"+(needsUpfront.length+needsDelivery.length>1?"s":"")+" ready to invoice Duncan · Total: "+fmt(invoiceTotal)
+      ),
+      React.createElement("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginTop:8}},
+        ...needsUpfront.map(p=>React.createElement("span",{key:p.id,style:{padding:"3px 10px",borderRadius:6,background:"#fff",fontSize:12,fontWeight:500}},p.client+" — upfront "+fmt(p.tcv*0.125))),
+        ...needsDelivery.map(p=>React.createElement("span",{key:p.id,style:{padding:"3px 10px",borderRadius:6,background:"#fff",fontSize:12,fontWeight:500}},p.client+" — delivery "+fmt(p.tcv*0.125)))
+      )
+    ),
+
+    // PROJECTS TAB
+    tab==="projects" && React.createElement(React.Fragment,null,
+      React.createElement("div",{style:{display:"flex",gap:10,marginBottom:20,flexWrap:"wrap"}},
+        filterBtn("all","All",projects.length),
+        ...STATUS_ORDER.map(s=>filterBtn(s,STATUS_LABELS[s],stats.byStatus[s].count))
+      ),
+      React.createElement("div",{style:{background:"#fff",borderRadius:12,boxShadow:"0 1px 3px rgba(0,0,0,0.06)",overflow:"hidden"}},
+        React.createElement("div",{style:{overflowX:"auto"}},
+          React.createElement("table",null,
+            React.createElement("thead",null,
+              React.createElement("tr",{style:{borderBottom:"2px solid #E2E8F0"}},
+                ...["Project","Status","TCV","Your Cut","Payments","Build %","Team",""].map(h=>
+                  React.createElement("th",{key:h,style:{padding:"10px 14px",textAlign:"left",fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:"0.05em"}},h)
+                )
+              )
+            ),
+            React.createElement("tbody",null,
+              ...filtered.map(p=>React.createElement(ProjectRow,{key:p.id,project:p,onUpdate:update,expanded:expandedId===p.id,onToggle:()=>setExpandedId(expandedId===p.id?null:p.id)}))
+            )
+          )
+        )
+      )
+    ),
+
+    // REVENUE TAB
+    tab==="revenue" && React.createElement("div",{style:{display:"flex",flexDirection:"column",gap:16}},
+      React.createElement("div",{style:{background:"#fff",borderRadius:12,padding:24,boxShadow:"0 1px 3px rgba(0,0,0,0.06)"}},
+        React.createElement("h2",{style:{fontSize:18,fontWeight:700,margin:"0 0 16px"}},"Revenue by Status"),
+        ...STATUS_ORDER.map(s=>{
+          const ps=projects.filter(p=>p.status===s);
+          const tcv=ps.reduce((sum,p)=>sum+p.tcv,0);
+          const cut=tcv*0.25;
+          const col=ps.reduce((sum,p)=>{let c=0;if(p.upfrontPaid)c+=p.tcv*0.125;if(p.deliveryPaid)c+=p.tcv*0.125;return sum+c;},0);
+          return React.createElement("div",{key:s,style:{display:"flex",alignItems:"center",gap:16,padding:"12px 0",borderBottom:"1px solid #F1F5F9"}},
+            React.createElement(StatusBadge,{status:s}),
+            React.createElement("div",{style:{flex:1}},
+              React.createElement("div",{style:{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:4}},
+                React.createElement("span",null,ps.length+" projects · TCV "+fmt(tcv)),
+                React.createElement("span",{style:{fontWeight:600}},"Your cut: "+fmt(cut))
+              ),
+              React.createElement(ProgressBar,{value:cut>0?(col/cut)*100:0,height:5}),
+              React.createElement("div",{style:{fontSize:11,color:"#64748B",marginTop:2}},fmt(col)+" collected / "+fmt(cut-col)+" outstanding")
+            )
+          );
+        })
+      ),
+      React.createElement("div",{style:{background:"#fff",borderRadius:12,padding:24,boxShadow:"0 1px 3px rgba(0,0,0,0.06)"}},
+        React.createElement("h2",{style:{fontSize:18,fontWeight:700,margin:"0 0 16px"}},"Weekly Margin"),
+        React.createElement("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:16}},
+          React.createElement("div",{style:{padding:16,background:"#F8FAFC",borderRadius:10}},
+            React.createElement("div",{style:{fontSize:12,color:"#64748B",marginBottom:4}},"Weekly Revenue (avg)"),
+            React.createElement("div",{style:{fontSize:24,fontWeight:700,color:"#10B981"}},"~"+fmt(9000))
+          ),
+          React.createElement("div",{style:{padding:16,background:"#F8FAFC",borderRadius:10}},
+            React.createElement("div",{style:{fontSize:12,color:"#64748B",marginBottom:4}},"Weekly Team Cost"),
+            React.createElement("div",{style:{fontSize:24,fontWeight:700,color:"#EF4444"}},fmt(WEEKLY_TEAM_COST)),
+            React.createElement("div",{style:{fontSize:11,color:"#94A3B8"}},"GK+Shika $2,200 + Suman $600")
+          ),
+          React.createElement("div",{style:{padding:16,background:"#F8FAFC",borderRadius:10}},
+            React.createElement("div",{style:{fontSize:12,color:"#64748B",marginBottom:4}},"Weekly Net Margin"),
+            React.createElement("div",{style:{fontSize:24,fontWeight:700,color:"#6366F1"}},"~"+fmt(9000-WEEKLY_TEAM_COST)),
+            React.createElement("div",{style:{fontSize:11,color:"#94A3B8"}},Math.round((9000-WEEKLY_TEAM_COST)/9000*100)+"% margin")
+          )
+        )
+      )
+    ),
+
+    // CAPACITY TAB
+    tab==="capacity" && React.createElement("div",null,
+      React.createElement("div",{style:{display:"flex",gap:16,flexWrap:"wrap",marginBottom:24}},
+        React.createElement(CapacityCard,{name:"GK + Shika",role:"Senior Team (Primary)",projects,maxProjects:15,weeklyCost:2200,speed:"~1 project/day",note:"Laser focused on HS delivery. 12-15hr days. Rarely make excuses."}),
+        React.createElement(CapacityCard,{name:"Suman",role:"Dev / Implementer (FT)",projects,maxProjects:4,weeklyCost:600,speed:"1-3/wk + adhoc",note:"Also handles BranchLead dev work + training new teams. Growing fast."}),
+        React.createElement(CapacityCard,{name:"Puja (Overflow)",role:"External (Emergency)",projects,maxProjects:4,weeklyCost:0,speed:"Variable",note:"Expensive. Emergency only. Phasing out."})
+      ),
+      React.createElement("div",{style:{background:"#fff",borderRadius:12,padding:24,boxShadow:"0 1px 3px rgba(0,0,0,0.06)"}},
+        React.createElement("h2",{style:{fontSize:18,fontWeight:700,margin:"0 0 16px"}},"Assignment Map"),
+        React.createElement("table",null,
+          React.createElement("thead",null,
+            React.createElement("tr",{style:{borderBottom:"2px solid #E2E8F0"}},
+              ...["Project","Team","Status","Progress","TCV"].map(h=>
+                React.createElement("th",{key:h,style:{padding:"8px 14px",textAlign:"left",fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase"}},h)
+              )
+            )
+          ),
+          React.createElement("tbody",null,
+            ...projects.filter(p=>p.assignedTeam&&p.status!=="delivered").sort((a,b)=>a.assignedTeam.localeCompare(b.assignedTeam)).map(p=>
+              React.createElement("tr",{key:p.id,style:{borderBottom:"1px solid #F1F5F9"}},
+                React.createElement("td",{style:{padding:"8px 14px",fontSize:13,fontWeight:500}},p.client),
+                React.createElement("td",{style:{padding:"8px 14px",fontSize:13}},p.assignedTeam),
+                React.createElement("td",{style:{padding:"8px 14px"}},React.createElement(StatusBadge,{status:p.status})),
+                React.createElement("td",{style:{padding:"8px 14px",minWidth:90}},
+                  React.createElement("div",{style:{display:"flex",alignItems:"center",gap:6}},
+                    React.createElement(ProgressBar,{value:p.lldProgress}),
+                    React.createElement("span",{style:{fontSize:11,fontWeight:600,color:"#64748B"}},p.lldProgress+"%")
+                  )
+                ),
+                React.createElement("td",{style:{padding:"8px 14px",fontSize:13,fontWeight:600}},fmt(p.tcv))
+              )
+            ),
+            ...projects.filter(p=>!p.assignedTeam&&p.status!=="delivered"&&p.status!=="pipeline").map(p=>
+              React.createElement("tr",{key:p.id,style:{borderBottom:"1px solid #F1F5F9",background:"#FEF2F2"}},
+                React.createElement("td",{style:{padding:"8px 14px",fontSize:13,fontWeight:500}},p.client),
+                React.createElement("td",{style:{padding:"8px 14px",fontSize:13,color:"#DC2626",fontWeight:600}},"Unassigned"),
+                React.createElement("td",{style:{padding:"8px 14px"}},React.createElement(StatusBadge,{status:p.status})),
+                React.createElement("td",{style:{padding:"8px 14px"}},"—"),
+                React.createElement("td",{style:{padding:"8px 14px",fontSize:13,fontWeight:600}},fmt(p.tcv))
+              )
+            )
+          )
+        )
+      )
+    ),
+
+    // Footer
+    React.createElement("div",{style:{marginTop:20,padding:14,background:"#EEF2FF",borderRadius:10,fontSize:12,color:"#4338CA"}},
+      React.createElement("strong",null,"v2 — Interactive Prototype"),
+      " · Click rows to expand. Use action buttons to progress projects through the lifecycle. Data is sample — next step is connecting to your real sheet."
+    )
+  );
+}
+
+ReactDOM.render(React.createElement(Dashboard), document.getElementById("root"));
+</script>
+</body>
+</html>
