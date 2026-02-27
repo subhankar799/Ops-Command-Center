@@ -1,399 +1,734 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MSS Ops Command Center</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #F8FAFC; color: #0F172A; }
-  #root { min-height: 100vh; }
-  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
-  table { border-collapse: collapse; width: 100%; }
-  button { cursor: pointer; }
-  button:hover { opacity: 0.85; }
-  tr:hover { background: #FAFBFD !important; }
-  a { color: #6366F1; text-decoration: none; }
-  a:hover { text-decoration: underline; }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MSS Ops Command Center</title>
+
+  <!-- React (CDN) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+
+  <!-- Supabase JS (UMD) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: #f7f8fb;
+      color: #0f172a;
+    }
+    a { color: inherit; }
+    .wrap { max-width: 1180px; margin: 0 auto; padding: 18px; }
+    .card {
+      background: white;
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 10px 25px rgba(15,23,42,0.06);
+      border: 1px solid rgba(15,23,42,0.08);
+    }
+    .row { display:flex; gap: 12px; flex-wrap: wrap; }
+    .kpi { flex: 1 1 240px; }
+    .kpi h3 { margin: 0 0 6px; font-size: 12px; font-weight: 700; color:#64748b; text-transform: uppercase; letter-spacing: .06em; }
+    .kpi .v { font-size: 26px; font-weight: 800; }
+    .kpi .s { margin-top: 6px; font-size: 12px; color:#64748b; }
+    .topbar { display:flex; justify-content: space-between; align-items:center; margin-bottom: 14px; }
+    .brand { display:flex; gap:10px; align-items:center; }
+    .badge { font-size: 12px; padding: 3px 8px; border-radius: 999px; background:#eef2ff; color:#3730a3; border: 1px solid rgba(55,48,163,.18); }
+    .tabs { display:flex; gap:8px; flex-wrap: wrap; }
+    .tab { cursor:pointer; font-size: 13px; padding: 8px 12px; border-radius: 10px; border:1px solid rgba(15,23,42,.12); background:white; }
+    .tab.active { background:#0f172a; color:white; border-color:#0f172a; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align:left; padding: 10px 10px; border-bottom: 1px solid rgba(15,23,42,.08); font-size: 13px; vertical-align: top; }
+    th { font-size: 12px; color:#64748b; text-transform: uppercase; letter-spacing: .06em; }
+    .pill { font-size: 12px; padding: 4px 10px; border-radius: 999px; border:1px solid rgba(15,23,42,.12); display:inline-block; background:#fff; }
+    .pill.pipeline { background:#f1f5f9; }
+    .pill.setup { background:#fff7ed; border-color: rgba(234,88,12,.25); }
+    .pill.in_progress { background:#ecfeff; border-color: rgba(6,182,212,.25); }
+    .pill.delivered { background:#f0fdf4; border-color: rgba(34,197,94,.25); }
+    .pill.closed { background:#fef2f2; border-color: rgba(239,68,68,.25); }
+    .btn { cursor:pointer; border:1px solid rgba(15,23,42,.14); background:#fff; padding:8px 10px; border-radius:10px; font-size: 13px; }
+    .btn.primary { background:#0f172a; color:white; border-color:#0f172a; }
+    .btn.danger { background:#fee2e2; border-color: rgba(239,68,68,.25); color:#991b1b; }
+    .input { width: 100%; padding: 10px 12px; border-radius: 10px; border:1px solid rgba(15,23,42,.18); font-size: 14px; }
+    .muted { color:#64748b; font-size: 12px; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 12px; }
+    .right { text-align:right; }
+    .grid2 { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 900px){ .grid2 { grid-template-columns: 1fr; } }
+    .toast { position: fixed; right: 18px; bottom: 18px; background:#0f172a; color:white; padding: 12px 14px; border-radius: 12px; box-shadow: 0 14px 30px rgba(15,23,42,.25); max-width: 420px; }
+    .modal-back { position:fixed; inset:0; background: rgba(15,23,42,.55); display:flex; align-items:center; justify-content:center; padding: 18px; }
+    .modal { width: min(560px, 100%); }
+    .split { display:flex; gap:12px; }
+    .split > div { flex:1; }
+  </style>
 </head>
 <body>
-<div id="root"></div>
-<script type="text/babel">
-const { useState, useMemo } = React;
+  <div id="root"></div>
 
-// ── TEAM DATA ────────────────────────────────────────────────────────────
-const WEEKLY_TEAM_COST = 2800; // GK+Shika $2200 + Suman $600
+  <script type="text/babel">
+    const { useEffect, useMemo, useState } = React;
 
-// ── PROJECT DATA ─────────────────────────────────────────────────────────
-const INITIAL_PROJECTS = [
-  { id:1, name:"Aurora Health — Marketing Hub Pro", client:"Aurora Health", tcv:32000, status:"delivered", assignedTeam:"GK + Shika", upfrontInvoiced:true, upfrontPaid:true, deliveryInvoiced:true, deliveryPaid:true, lldProgress:100, signedDate:"2026-01-05", deliveryDate:"2026-01-22", slackChannel:"mss-aurora-health-gk", notes:"Clean delivery. Single brand, standard Marketing Hub." },
-  { id:2, name:"Nexus Group — Enterprise CRM + Ops", client:"Nexus Group", tcv:58000, status:"delivered", assignedTeam:"GK + Shika", upfrontInvoiced:true, upfrontPaid:true, deliveryInvoiced:true, deliveryPaid:false, lldProgress:100, signedDate:"2025-12-15", deliveryDate:"2026-02-10", slackChannel:"mss-nexus-enterprise-gk", notes:"Multi-brand, custom objects. Delivery invoice pending." },
-  { id:3, name:"Tara Treasures — Sales + Service Hub", client:"Tara Treasures", tcv:28000, status:"in_progress", assignedTeam:"GK + Shika", upfrontInvoiced:true, upfrontPaid:true, deliveryInvoiced:false, deliveryPaid:false, lldProgress:72, signedDate:"2026-02-03", deliveryDate:null, slackChannel:"mss-tara-treasures-gk", notes:"E-commerce. Shopify integration." },
-  { id:4, name:"Pinnacle Finance — CRM Migration", client:"Pinnacle Finance", tcv:44000, status:"in_progress", assignedTeam:"GK + Shika", upfrontInvoiced:true, upfrontPaid:true, deliveryInvoiced:false, deliveryPaid:false, lldProgress:55, signedDate:"2026-02-05", deliveryDate:null, slackChannel:"mss-pinnacle-crm-gk", notes:"Salesforce migration. 25k contacts. Complex RBAC." },
-  { id:5, name:"Meridian Legal — Marketing Hub Starter", client:"Meridian Legal", tcv:14000, status:"in_progress", assignedTeam:"Suman", upfrontInvoiced:true, upfrontPaid:true, deliveryInvoiced:false, deliveryPaid:false, lldProgress:40, signedDate:"2026-02-10", deliveryDate:null, slackChannel:"mss-meridian-legal-suman", notes:"Standard setup. Good training project for Suman." },
-  { id:6, name:"Forge Manufacturing — Ops Hub + Integrations", client:"Forge Manufacturing", tcv:52000, status:"in_progress", assignedTeam:"GK + Shika", upfrontInvoiced:true, upfrontPaid:true, deliveryInvoiced:false, deliveryPaid:false, lldProgress:30, signedDate:"2026-02-12", deliveryDate:null, slackChannel:"mss-forge-ops-gk", notes:"Heavy integration work. Xero + custom ERP." },
-  { id:7, name:"Catalyst Digital — Sales Hub Pro", client:"Catalyst Digital", tcv:22000, status:"in_progress", assignedTeam:"GK + Shika", upfrontInvoiced:true, upfrontPaid:true, deliveryInvoiced:false, deliveryPaid:false, lldProgress:85, signedDate:"2026-01-28", deliveryDate:null, slackChannel:"mss-catalyst-sales-gk", notes:"Nearly done. UAT scheduled this week." },
-  { id:8, name:"Brightpath Education — CMS + Marketing", client:"Brightpath Education", tcv:36000, status:"in_progress", assignedTeam:"GK + Shika", upfrontInvoiced:true, upfrontPaid:true, deliveryInvoiced:false, deliveryPaid:false, lldProgress:20, signedDate:"2026-02-17", deliveryDate:null, slackChannel:"mss-brightpath-edu-gk", notes:"CMS Hub + Marketing Hub. Multi-campus." },
-  { id:9, name:"Vertex Consulting — Full Stack", client:"Vertex Consulting", tcv:48000, status:"setup", assignedTeam:"", upfrontInvoiced:true, upfrontPaid:true, deliveryInvoiced:false, deliveryPaid:false, lldProgress:0, signedDate:"2026-02-20", deliveryDate:null, slackChannel:"", notes:"Just signed. Kickoff call being booked." },
-  { id:10, name:"Horizon Wellness — Sales Hub Starter", client:"Horizon Wellness", tcv:12000, status:"setup", assignedTeam:"", upfrontInvoiced:false, upfrontPaid:false, deliveryInvoiced:false, deliveryPaid:false, lldProgress:0, signedDate:"2026-02-21", deliveryDate:null, slackChannel:"", notes:"Small deal. Good quick win for Suman." },
-  { id:11, name:"Coastal Properties — CRM + Service", client:"Coastal Properties", tcv:34000, status:"setup", assignedTeam:"", upfrontInvoiced:false, upfrontPaid:false, deliveryInvoiced:false, deliveryPaid:false, lldProgress:0, signedDate:"2026-02-22", deliveryDate:null, slackChannel:"", notes:"Real estate. Property management integration." },
-  { id:12, name:"Summit Retail — Enterprise Implementation", client:"Summit Retail", tcv:72000, status:"pipeline", assignedTeam:"", upfrontInvoiced:false, upfrontPaid:false, deliveryInvoiced:false, deliveryPaid:false, lldProgress:0, signedDate:null, deliveryDate:null, slackChannel:"", notes:"Big one. Multi-brand, multi-region. Duncan closing." },
-  { id:13, name:"GreenLeaf — Marketing Hub", client:"GreenLeaf", tcv:18000, status:"pipeline", assignedTeam:"", upfrontInvoiced:false, upfrontPaid:false, deliveryInvoiced:false, deliveryPaid:false, lldProgress:0, signedDate:null, deliveryDate:null, slackChannel:"", notes:"Standard. Waiting on quote approval." },
-];
+    // ------------------------------------------------------------------
+    // 1) CONFIG (static HTML friendly)
+    // ------------------------------------------------------------------
+    // For Vercel static sites, there is no build step to inject env vars.
+    // Easiest: hardcode defaults here (anon key is safe for frontend),
+    // and allow override via localStorage.
+    const DEFAULT_SUPABASE_URL = "https://bdwmqyctjedrveltohnq.supabase.co";
+    const DEFAULT_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJkd21xeWN0amVkcnZlbHRvaG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIxMDk4MzgsImV4cCI6MjA4NzY4NTgzOH0.IgeJrIJ4wWbLnh6j9JZ_SWh95kAa42K5VqvOHGU2Lig"; // <-- replace once in git
 
-const STATUS_ORDER = ["pipeline","setup","in_progress","delivered"];
-const STATUS_LABELS = { pipeline:"Pipeline", setup:"Setup / Kickoff", in_progress:"In Delivery", delivered:"Delivered" };
-const STATUS_COLORS = {
-  pipeline:{ bg:"#FEF3C7", text:"#92400E", border:"#F59E0B" },
-  setup:{ bg:"#DBEAFE", text:"#1E40AF", border:"#3B82F6" },
-  in_progress:{ bg:"#D1FAE5", text:"#065F46", border:"#10B981" },
-  delivered:{ bg:"#E0E7FF", text:"#3730A3", border:"#6366F1" },
-};
+    const CONFIG_KEY = "mss_ops_config_v1";
 
-const fmt = n => "$" + n.toLocaleString("en-AU",{minimumFractionDigits:0});
+    function loadConfig() {
+      try {
+        const raw = localStorage.getItem(CONFIG_KEY);
+        if (raw) return JSON.parse(raw);
+      } catch (e) {}
+      return {
+        url: DEFAULT_SUPABASE_URL,
+        anonKey: DEFAULT_SUPABASE_ANON_KEY,
+        slackHandoffFn: "slack-channel-handoff",
+      };
+    }
 
-// ── Small Components ─────────────────────────────────────────────────────
+    function saveConfig(cfg) {
+      localStorage.setItem(CONFIG_KEY, JSON.stringify(cfg));
+    }
 
-function KPI({label,value,sub,color="#6366F1",alert:a}) {
-  return React.createElement("div",{style:{background:"#fff",borderRadius:12,padding:"18px 22px",flex:1,minWidth:170,boxShadow:"0 1px 3px rgba(0,0,0,0.06)",borderTop:`3px solid ${color}`,position:"relative"}},
-    a && React.createElement("div",{style:{position:"absolute",top:8,right:12,width:8,height:8,borderRadius:"50%",background:"#EF4444",animation:"pulse 2s infinite"}}),
-    React.createElement("div",{style:{fontSize:12,color:"#64748B",fontWeight:500,marginBottom:4}},label),
-    React.createElement("div",{style:{fontSize:26,fontWeight:700,color:"#0F172A",lineHeight:1.2}},value),
-    sub && React.createElement("div",{style:{fontSize:11,color:"#94A3B8",marginTop:4}},sub)
-  );
-}
+    function createSb(cfg) {
+      const { createClient } = window.supabase;
+      return createClient(cfg.url, cfg.anonKey);
+    }
 
-function StatusBadge({status}) {
-  const c = STATUS_COLORS[status];
-  return React.createElement("span",{style:{display:"inline-block",padding:"3px 10px",borderRadius:999,fontSize:11,fontWeight:600,background:c.bg,color:c.text,border:`1px solid ${c.border}`}},STATUS_LABELS[status]);
-}
+    function money(n, currency="AUD") {
+      try {
+        return new Intl.NumberFormat(undefined, { style: "currency", currency }).format(Number(n || 0));
+      } catch (e) {
+        return "$" + (Number(n || 0).toFixed(2));
+      }
+    }
 
-function ProgressBar({value,height=6}) {
-  const color = value>=80?"#10B981":value>=50?"#F59E0B":value>=20?"#3B82F6":"#CBD5E1";
-  return React.createElement("div",{style:{background:"#F1F5F9",borderRadius:99,height,overflow:"hidden",width:"100%"}},
-    React.createElement("div",{style:{width:`${Math.min(value,100)}%`,height:"100%",background:color,borderRadius:99,transition:"width 0.3s"}})
-  );
-}
+    function daysBetween(a, b) {
+      if (!a || !b) return null;
+      const d1 = new Date(a);
+      const d2 = new Date(b);
+      const ms = d2 - d1;
+      if (Number.isNaN(ms)) return null;
+      return Math.round(ms / (1000*60*60*24));
+    }
 
-function PayDot({done,label}) {
-  return React.createElement("span",{style:{display:"inline-flex",alignItems:"center",gap:4,fontSize:11,color:done?"#059669":"#DC2626"}},
-    React.createElement("span",{style:{width:7,height:7,borderRadius:"50%",background:done?"#10B981":"#EF4444",display:"inline-block"}}),
-    label
-  );
-}
+    // ------------------------------------------------------------------
+    // 2) UI: Config Modal (only if missing keys)
+    // ------------------------------------------------------------------
+    function ConfigModal({ initial, onSave }) {
+      const [url, setUrl] = useState(initial.url || "");
+      const [anonKey, setAnonKey] = useState(initial.anonKey || "");
+      const [slackHandoffFn, setSlackHandoffFn] = useState(initial.slackHandoffFn || "slack-channel-handoff");
 
-function ActionBtn({label,borderColor,bgColor,textColor,onClick}) {
-  return React.createElement("button",{onClick,style:{padding:"5px 12px",borderRadius:6,border:`1px solid ${borderColor}`,background:bgColor,color:textColor,fontSize:11,fontWeight:600,cursor:"pointer"}},label);
-}
+      const invalid = !url || !anonKey || anonKey.includes("PASTE_ANON_KEY_HERE");
 
-// ── Project Row ──────────────────────────────────────────────────────────
+      return (
+        <div className="modal-back">
+          <div className="card modal">
+            <div className="topbar">
+              <div className="brand">
+                <div style={{fontWeight:900, fontSize:16}}>MSS Ops Command Center</div>
+                <span className="badge">Config</span>
+              </div>
+            </div>
+            <p className="muted" style={{marginTop:0}}>
+              This dashboard is a static HTML app. Add your Supabase URL + anon key once; we store it in your browser (localStorage).
+              The anon key is safe for frontend because Row Level Security protects your data.
+            </p>
 
-function ProjectRow({project:p, onUpdate, expanded, onToggle}) {
-  const cut = p.tcv * 0.25;
-  const up = cut * 0.5;
-  const del = cut * 0.5;
+            <div style={{display:"grid", gap:10}}>
+              <div>
+                <div className="muted">Supabase URL</div>
+                <input className="input" value={url} onChange={(e)=>setUrl(e.target.value)} placeholder="https://xxxx.supabase.co" />
+              </div>
+              <div>
+                <div className="muted">Supabase anon public key</div>
+                <input className="input mono" value={anonKey} onChange={(e)=>setAnonKey(e.target.value)} placeholder="eyJhbGciOi..." />
+              </div>
+              <div>
+                <div className="muted">Slack handoff Edge Function name</div>
+                <input className="input" value={slackHandoffFn} onChange={(e)=>setSlackHandoffFn(e.target.value)} placeholder="slack-channel-handoff" />
+              </div>
+              <div className="row" style={{justifyContent:"flex-end"}}>
+                <button className="btn primary" disabled={invalid} onClick={()=>onSave({ url, anonKey, slackHandoffFn })}>
+                  Save & Continue
+                </button>
+              </div>
+              {invalid && <div className="muted">Paste valid values to continue.</div>}
+            </div>
+          </div>
+        </div>
+      );
+    }
 
-  const mainRow = React.createElement("tr",{onClick:onToggle,style:{cursor:"pointer",background:expanded?"#F8FAFC":"#fff",borderBottom:"1px solid #F1F5F9",transition:"background 0.15s"}},
-    React.createElement("td",{style:{padding:"10px 14px",maxWidth:220}},
-      React.createElement("div",{style:{fontWeight:600,fontSize:13,color:"#0F172A"}},p.client),
-      React.createElement("div",{style:{fontSize:11,color:"#94A3B8"}},p.name.replace(p.client+" — ",""))
-    ),
-    React.createElement("td",{style:{padding:"10px 14px"}},React.createElement(StatusBadge,{status:p.status})),
-    React.createElement("td",{style:{padding:"10px 14px",fontWeight:600,fontSize:13}},fmt(p.tcv)),
-    React.createElement("td",{style:{padding:"10px 14px",fontWeight:600,fontSize:13,color:"#6366F1"}},fmt(cut)),
-    React.createElement("td",{style:{padding:"10px 14px"}},
-      React.createElement("div",{style:{display:"flex",flexDirection:"column",gap:2}},
-        React.createElement(PayDot,{done:p.upfrontPaid,label:`50% up ${fmt(up)}`}),
-        React.createElement(PayDot,{done:p.deliveryPaid,label:`50% del ${fmt(del)}`})
-      )
-    ),
-    React.createElement("td",{style:{padding:"10px 14px",minWidth:90}},
-      (p.status==="in_progress"||p.status==="delivered") ?
-        React.createElement("div",{style:{display:"flex",alignItems:"center",gap:6}},
-          React.createElement(ProgressBar,{value:p.lldProgress}),
-          React.createElement("span",{style:{fontSize:11,color:"#64748B",fontWeight:600,minWidth:28}},p.lldProgress+"%")
-        ) : React.createElement("span",{style:{fontSize:11,color:"#94A3B8"}},"—")
-    ),
-    React.createElement("td",{style:{padding:"10px 14px",fontSize:12,color:p.assignedTeam?"#334155":"#DC2626",fontWeight:p.assignedTeam?400:600}},p.assignedTeam||"Unassigned"),
-    React.createElement("td",{style:{padding:"10px 6px",fontSize:14,color:"#94A3B8"}},expanded?"▾":"▸")
-  );
+    // ------------------------------------------------------------------
+    // 3) Auth screen
+    // ------------------------------------------------------------------
+    function AuthScreen({ onLogin, sb }) {
+      const [email, setEmail] = useState("");
+      const [password, setPassword] = useState("");
+      const [loading, setLoading] = useState(false);
+      const [err, setErr] = useState("");
 
-  if (!expanded) return mainRow;
+      async function signIn() {
+        setErr("");
+        setLoading(true);
+        const { data, error } = await sb.auth.signInWithPassword({ email, password });
+        setLoading(false);
+        if (error) return setErr(error.message);
+        onLogin(data.session);
+      }
 
-  const actions = [];
-  const ab = (label,bc,bg,tc,upd) => actions.push(React.createElement(ActionBtn,{key:label,label,borderColor:bc,bgColor:bg,textColor:tc,onClick:e=>{e.stopPropagation();onUpdate(p.id,upd);}}));
+      return (
+        <div className="wrap" style={{paddingTop: 54}}>
+          <div className="card" style={{maxWidth: 520, margin:"0 auto"}}>
+            <div style={{fontWeight: 900, fontSize: 18}}>Sign in</div>
+            <div className="muted" style={{marginTop: 6}}>
+              Use the Supabase Auth user you created (e.g., Nick).
+            </div>
 
-  if (p.status==="pipeline") ab("Deal Signed","#3B82F6","#DBEAFE","#1D4ED8",{status:"setup"});
-  if (p.status==="setup"&&!p.upfrontInvoiced) ab("Mark Invoiced","#F59E0B","#FEF3C7","#92400E",{upfrontInvoiced:true});
-  if (p.upfrontInvoiced&&!p.upfrontPaid) ab("Upfront Paid","#10B981","#D1FAE5","#065F46",{upfrontPaid:true});
-  if (p.status==="setup") ab("Start Delivery","#10B981","#D1FAE5","#065F46",{status:"in_progress"});
-  if (p.status==="in_progress"&&p.lldProgress>=85) ab("Mark Delivered","#6366F1","#E0E7FF","#4338CA",{status:"delivered",lldProgress:100,deliveryDate:new Date().toISOString().split("T")[0]});
-  if (p.status==="delivered"&&!p.deliveryInvoiced) ab("Invoice Delivery","#F59E0B","#FEF3C7","#92400E",{deliveryInvoiced:true});
-  if (p.deliveryInvoiced&&!p.deliveryPaid) ab("Delivery Paid","#10B981","#D1FAE5","#065F46",{deliveryPaid:true});
+            <div style={{display:"grid", gap: 10, marginTop: 14}}>
+              <div>
+                <div className="muted">Email</div>
+                <input className="input" value={email} onChange={(e)=>setEmail(e.target.value)} placeholder="nick@..." />
+              </div>
+              <div>
+                <div className="muted">Password</div>
+                <input className="input" type="password" value={password} onChange={(e)=>setPassword(e.target.value)} placeholder="••••••••" />
+              </div>
+              {err && <div className="pill" style={{borderColor:"rgba(239,68,68,.35)", background:"#fef2f2", color:"#991b1b"}}>{err}</div>}
+              <button className={"btn primary"} onClick={signIn} disabled={loading || !email || !password}>
+                {loading ? "Signing in..." : "Sign in"}
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
 
-  const detail = React.createElement("tr",{key:p.id+"_detail"},
-    React.createElement("td",{colSpan:8,style:{padding:0,background:"#F8FAFC"}},
-      React.createElement("div",{style:{padding:"14px 20px",display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:14}},
-        React.createElement("div",null,
-          React.createElement("div",{style:{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:4}},"Details"),
-          React.createElement("div",{style:{fontSize:12,color:"#334155"}},"Signed: "+(p.signedDate||"—")),
-          React.createElement("div",{style:{fontSize:12,color:"#334155"}},"Delivered: "+(p.deliveryDate||"—")),
-          p.slackChannel && React.createElement("div",{style:{fontSize:12,color:"#6366F1"}},"#"+p.slackChannel)
-        ),
-        React.createElement("div",null,
-          React.createElement("div",{style:{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:4}},"Notes"),
-          React.createElement("div",{style:{fontSize:12,color:"#334155"}},p.notes)
-        ),
-        React.createElement("div",null,
-          React.createElement("div",{style:{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:4}},"Actions"),
-          React.createElement("div",{style:{display:"flex",gap:6,flexWrap:"wrap"}},...actions)
-        )
-      )
-    )
-  );
+    // ------------------------------------------------------------------
+    // 4) Main Dashboard
+    // ------------------------------------------------------------------
+    function Dashboard({ sb, cfg, me, role, onLogout, toast }) {
+      const [tab, setTab] = useState("projects");
 
-  return React.createElement(React.Fragment,null,mainRow,detail);
-}
+      const [projects, setProjects] = useState([]);
+      const [capacity, setCapacity] = useState([]);
+      const [activity, setActivity] = useState([]);
+      const [loading, setLoading] = useState(true);
 
-// ── Capacity Card ────────────────────────────────────────────────────────
+      // ---- fetchers
+      async function loadAll() {
+        setLoading(true);
 
-function CapacityCard({name,role,projects,maxProjects,weeklyCost,speed,note}) {
-  const active = projects.filter(p=>p.assignedTeam===name&&(p.status==="in_progress"||p.status==="setup")).length;
-  const util = Math.round((active/maxProjects)*100);
-  const color = util>=85?"#EF4444":util>=60?"#F59E0B":"#10B981";
-  const avail = maxProjects-active;
+        // Projects (admin can see all; team will be row-filtered by RLS)
+        const projSelect = role === "admin"
+          ? "id,name,client,brand,tcv,nick_percentage,status,assigned_team_name,kickoff_date,delivery_date,lld_progress,slack_channel,drive_folder,sow_link,gantt_link,hld_link,lld_link,xlsx_tracker_link,html_hld_link,notes,integration_notes,upfront_invoiced,upfront_paid,delivery_invoiced,delivery_paid,signed_date"
+          : "id,name,client,brand,status,assigned_team_name,kickoff_date,delivery_date,lld_progress,slack_channel,drive_folder,sow_link,gantt_link,hld_link,lld_link,xlsx_tracker_link,html_hld_link,notes,integration_notes";
 
-  return React.createElement("div",{style:{background:"#fff",borderRadius:12,padding:18,boxShadow:"0 1px 3px rgba(0,0,0,0.06)",borderLeft:`4px solid ${color}`,flex:1,minWidth:240}},
-    React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"start",marginBottom:10}},
-      React.createElement("div",null,
-        React.createElement("div",{style:{fontWeight:700,fontSize:15,color:"#0F172A"}},name),
-        React.createElement("div",{style:{fontSize:11,color:"#64748B"}},role)
-      ),
-      React.createElement("div",{style:{background:color+"18",color,padding:"2px 8px",borderRadius:999,fontSize:11,fontWeight:700}},util+"%")
-    ),
-    React.createElement("div",{style:{fontSize:12,color:"#334155",marginBottom:4}},
-      active+" active / "+maxProjects+" max · ",
-      React.createElement("span",{style:{color:avail>0?"#10B981":"#EF4444",fontWeight:600}},avail+" slots open")
-    ),
-    React.createElement("div",{style:{fontSize:11,color:"#64748B",marginBottom:6}},fmt(weeklyCost)+"/wk AUD · "+speed),
-    React.createElement(ProgressBar,{value:util,height:4}),
-    React.createElement("div",{style:{fontSize:11,color:"#94A3B8",marginTop:8,fontStyle:"italic"}},note)
-  );
-}
+        const { data: pData, error: pErr } = await sb
+          .from("projects")
+          .select(projSelect)
+          .order("id", { ascending: false });
 
-// ── MAIN DASHBOARD ───────────────────────────────────────────────────────
+        if (pErr) toast("Failed to load projects: " + pErr.message, true);
+        setProjects(pData || []);
 
-function Dashboard() {
-  const [projects, setProjects] = useState(INITIAL_PROJECTS);
-  const [expandedId, setExpandedId] = useState(null);
-  const [view, setView] = useState("all");
-  const [tab, setTab] = useState("projects");
+        // Capacity (admin useful)
+        if (role === "admin") {
+          const { data: cData, error: cErr } = await sb
+            .from("capacity_overview")
+            .select("*")
+            .order("utilization_pct", { ascending: false });
 
-  const update = (id, changes) => setProjects(ps => ps.map(p => p.id===id ? {...p,...changes} : p));
+          if (cErr) toast("Failed to load capacity: " + cErr.message, true);
+          setCapacity(cData || []);
+        }
 
-  const stats = useMemo(() => {
-    const totalTCV = projects.reduce((s,p)=>s+p.tcv,0);
-    const nickTotal = totalTCV*0.25;
-    const collected = projects.reduce((s,p)=>{
-      let c=0; if(p.upfrontPaid) c+=p.tcv*0.125; if(p.deliveryPaid) c+=p.tcv*0.125; return s+c;
-    },0);
-    const outstanding = nickTotal-collected;
-    const invoiced = projects.reduce((s,p)=>{
-      let c=0; if(p.upfrontInvoiced&&!p.upfrontPaid) c+=p.tcv*0.125; if(p.deliveryInvoiced&&!p.deliveryPaid) c+=p.tcv*0.125; return s+c;
-    },0);
-    const byStatus = {};
-    STATUS_ORDER.forEach(s=>{
-      const ps=projects.filter(p=>p.status===s);
-      byStatus[s]={count:ps.length,tcv:ps.reduce((sum,p)=>sum+p.tcv,0)};
-    });
-    return {totalTCV,nickTotal,collected,outstanding,invoiced,byStatus};
-  },[projects]);
+        // Activity (admin useful)
+        const { data: aData, error: aErr } = await sb
+          .from("activity_log")
+          .select("id,project_id,actor,action,old_value,new_value,details,created_at")
+          .order("created_at", { ascending: false })
+          .limit(60);
 
-  const filtered = useMemo(()=>{
-    let list=[...projects];
-    if(view!=="all") list=list.filter(p=>p.status===view);
-    list.sort((a,b)=>STATUS_ORDER.indexOf(a.status)-STATUS_ORDER.indexOf(b.status));
-    return list;
-  },[projects,view]);
+        if (aErr) toast("Failed to load activity: " + aErr.message, true);
+        setActivity(aData || []);
 
-  // Invoice alert
-  const needsUpfront = projects.filter(p=>(p.status==="setup"||p.status==="in_progress")&&!p.upfrontInvoiced);
-  const needsDelivery = projects.filter(p=>p.status==="delivered"&&!p.deliveryInvoiced);
-  const invoiceTotal = needsUpfront.reduce((s,p)=>s+p.tcv*0.125,0)+needsDelivery.reduce((s,p)=>s+p.tcv*0.125,0);
-  const hasInvoiceAlert = needsUpfront.length+needsDelivery.length>0;
+        setLoading(false);
+      }
 
-  const tabBtn = (key,label) => React.createElement("button",{onClick:()=>setTab(key),style:{padding:"8px 20px",borderRadius:8,border:"none",fontSize:13,fontWeight:600,background:tab===key?"#6366F1":"transparent",color:tab===key?"#fff":"#64748B",cursor:"pointer"}},label);
+      useEffect(() => {
+        loadAll();
 
-  const filterBtn = (key,label,count) => {
-    const active=view===key;
-    const sc=STATUS_COLORS[key]||{bg:"#EEF2FF",text:"#4338CA",border:"#6366F1"};
-    return React.createElement("button",{key,onClick:()=>setView(view===key?"all":key),style:{padding:"6px 14px",borderRadius:6,border:`1px solid ${active?sc.border:"#E2E8F0"}`,background:active?sc.bg:"#fff",color:active?sc.text:"#64748B",fontSize:12,fontWeight:600,cursor:"pointer"}},label+" ("+count+")");
-  };
+        // Realtime: listen to project updates and refresh small
+        const channel = sb
+          .channel("mss-ops-projects")
+          .on("postgres_changes", { event: "*", schema: "public", table: "projects" }, (payload) => {
+            // light refresh
+            loadAll();
+          })
+          .subscribe();
 
-  return React.createElement("div",{style:{padding:"24px 32px",maxWidth:1400,margin:"0 auto"}},
+        return () => { sb.removeChannel(channel); };
+      }, []);
 
-    // Header
-    React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:24,flexWrap:"wrap",gap:12}},
-      React.createElement("div",null,
-        React.createElement("h1",{style:{fontSize:26,fontWeight:800,color:"#0F172A"}},"MSS Ops Command Center"),
-        React.createElement("p",{style:{fontSize:13,color:"#64748B",marginTop:2}},"MyScale Solutions · "+projects.length+" projects · "+fmt(stats.totalTCV)+" total pipeline")
-      ),
-      React.createElement("div",{style:{display:"flex",gap:4,background:"#F1F5F9",borderRadius:10,padding:4}},
-        tabBtn("projects","Projects"),
-        tabBtn("revenue","Revenue"),
-        tabBtn("capacity","Capacity")
-      )
-    ),
+      // ---- derived KPIs (admin only)
+      const revenue = useMemo(() => {
+        if (role !== "admin") return null;
+        const rows = projects || [];
+        let tcv = 0, nickCut = 0, collected = 0, outstanding = 0;
+        rows.forEach(p => {
+          const pct = Number(p.nick_percentage || 0.25);
+          const nc = Number(p.tcv || 0) * pct;
+          tcv += Number(p.tcv || 0);
+          nickCut += nc;
 
-    // KPIs
-    React.createElement("div",{style:{display:"flex",gap:14,marginBottom:20,flexWrap:"wrap"}},
-      React.createElement(KPI,{label:"Your Total (25%)",value:fmt(stats.nickTotal),sub:"from "+fmt(stats.totalTCV)+" TCV",color:"#6366F1"}),
-      React.createElement(KPI,{label:"Collected",value:fmt(stats.collected),sub:Math.round(stats.collected/stats.nickTotal*100)+"% of total",color:"#10B981"}),
-      React.createElement(KPI,{label:"Outstanding",value:fmt(stats.outstanding),sub:fmt(stats.invoiced)+" invoiced, awaiting",color:"#F59E0B",alert:stats.outstanding>20000}),
-      React.createElement(KPI,{label:"Weekly Team Cost",value:fmt(WEEKLY_TEAM_COST),sub:"GK+Shika $2.2k + Suman $600",color:"#3B82F6"}),
-      React.createElement(KPI,{label:"Weekly Revenue",value:"~"+fmt(9000),sub:"Current average pace",color:"#10B981"})
-    ),
+          const upfront = nc * 0.5;
+          const delivery = nc * 0.5;
+          const c = (p.upfront_paid ? upfront : 0) + (p.delivery_paid ? delivery : 0);
+          collected += c;
+          outstanding += (nc - c);
+        });
+        return { tcv, nickCut, collected, outstanding };
+      }, [projects, role]);
 
-    // Invoice Alert
-    hasInvoiceAlert && React.createElement("div",{style:{background:invoiceTotal>=10000?"#FEE2E2":"#FEF3C7",border:`1px solid ${invoiceTotal>=10000?"#EF4444":"#F59E0B"}`,borderRadius:10,padding:"14px 20px",marginBottom:20}},
-      React.createElement("div",{style:{fontWeight:700,fontSize:14,color:invoiceTotal>=10000?"#991B1B":"#92400E",marginBottom:4}},
-        invoiceTotal>=10000?"⚡ Invoice Now — Over $10k threshold":"📋 Invoice Queue — Ready for Thu/Fri batch"
-      ),
-      React.createElement("div",{style:{fontSize:13,color:"#334155"}},
-        (needsUpfront.length+needsDelivery.length)+" project"+(needsUpfront.length+needsDelivery.length>1?"s":"")+" ready to invoice Duncan · Total: "+fmt(invoiceTotal)
-      ),
-      React.createElement("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginTop:8}},
-        ...needsUpfront.map(p=>React.createElement("span",{key:p.id,style:{padding:"3px 10px",borderRadius:6,background:"#fff",fontSize:12,fontWeight:500}},p.client+" — upfront "+fmt(p.tcv*0.125))),
-        ...needsDelivery.map(p=>React.createElement("span",{key:p.id,style:{padding:"3px 10px",borderRadius:6,background:"#fff",fontSize:12,fontWeight:500}},p.client+" — delivery "+fmt(p.tcv*0.125)))
-      )
-    ),
+      // ----------------------------------------------------------------
+      // Actions
+      // ----------------------------------------------------------------
+      async function updateProject(id, patch) {
+        const { error } = await sb.from("projects").update(patch).eq("id", id);
+        if (error) {
+          toast("Update failed: " + error.message, true);
+          return false;
+        }
+        return true;
+      }
 
-    // PROJECTS TAB
-    tab==="projects" && React.createElement(React.Fragment,null,
-      React.createElement("div",{style:{display:"flex",gap:10,marginBottom:20,flexWrap:"wrap"}},
-        filterBtn("all","All",projects.length),
-        ...STATUS_ORDER.map(s=>filterBtn(s,STATUS_LABELS[s],stats.byStatus[s].count))
-      ),
-      React.createElement("div",{style:{background:"#fff",borderRadius:12,boxShadow:"0 1px 3px rgba(0,0,0,0.06)",overflow:"hidden"}},
-        React.createElement("div",{style:{overflowX:"auto"}},
-          React.createElement("table",null,
-            React.createElement("thead",null,
-              React.createElement("tr",{style:{borderBottom:"2px solid #E2E8F0"}},
-                ...["Project","Status","TCV","Your Cut","Payments","Build %","Team",""].map(h=>
-                  React.createElement("th",{key:h,style:{padding:"10px 14px",textAlign:"left",fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:"0.05em"}},h)
-                )
-              )
-            ),
-            React.createElement("tbody",null,
-              ...filtered.map(p=>React.createElement(ProjectRow,{key:p.id,project:p,onUpdate:update,expanded:expandedId===p.id,onToggle:()=>setExpandedId(expandedId===p.id?null:p.id)}))
-            )
-          )
-        )
-      )
-    ),
+      async function handleStatusChange(project, newStatus) {
+        const oldStatus = project.status;
+        if (oldStatus === newStatus) return;
 
-    // REVENUE TAB
-    tab==="revenue" && React.createElement("div",{style:{display:"flex",flexDirection:"column",gap:16}},
-      React.createElement("div",{style:{background:"#fff",borderRadius:12,padding:24,boxShadow:"0 1px 3px rgba(0,0,0,0.06)"}},
-        React.createElement("h2",{style:{fontSize:18,fontWeight:700,margin:"0 0 16px"}},"Revenue by Status"),
-        ...STATUS_ORDER.map(s=>{
-          const ps=projects.filter(p=>p.status===s);
-          const tcv=ps.reduce((sum,p)=>sum+p.tcv,0);
-          const cut=tcv*0.25;
-          const col=ps.reduce((sum,p)=>{let c=0;if(p.upfrontPaid)c+=p.tcv*0.125;if(p.deliveryPaid)c+=p.tcv*0.125;return sum+c;},0);
-          return React.createElement("div",{key:s,style:{display:"flex",alignItems:"center",gap:16,padding:"12px 0",borderBottom:"1px solid #F1F5F9"}},
-            React.createElement(StatusBadge,{status:s}),
-            React.createElement("div",{style:{flex:1}},
-              React.createElement("div",{style:{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:4}},
-                React.createElement("span",null,ps.length+" projects · TCV "+fmt(tcv)),
-                React.createElement("span",{style:{fontWeight:600}},"Your cut: "+fmt(cut))
-              ),
-              React.createElement(ProgressBar,{value:cut>0?(col/cut)*100:0,height:5}),
-              React.createElement("div",{style:{fontSize:11,color:"#64748B",marginTop:2}},fmt(col)+" collected / "+fmt(cut-col)+" outstanding")
-            )
-          );
-        })
-      ),
-      React.createElement("div",{style:{background:"#fff",borderRadius:12,padding:24,boxShadow:"0 1px 3px rgba(0,0,0,0.06)"}},
-        React.createElement("h2",{style:{fontSize:18,fontWeight:700,margin:"0 0 16px"}},"Weekly Margin"),
-        React.createElement("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:16}},
-          React.createElement("div",{style:{padding:16,background:"#F8FAFC",borderRadius:10}},
-            React.createElement("div",{style:{fontSize:12,color:"#64748B",marginBottom:4}},"Weekly Revenue (avg)"),
-            React.createElement("div",{style:{fontSize:24,fontWeight:700,color:"#10B981"}},"~"+fmt(9000))
-          ),
-          React.createElement("div",{style:{padding:16,background:"#F8FAFC",borderRadius:10}},
-            React.createElement("div",{style:{fontSize:12,color:"#64748B",marginBottom:4}},"Weekly Team Cost"),
-            React.createElement("div",{style:{fontSize:24,fontWeight:700,color:"#EF4444"}},fmt(WEEKLY_TEAM_COST)),
-            React.createElement("div",{style:{fontSize:11,color:"#94A3B8"}},"GK+Shika $2,200 + Suman $600")
-          ),
-          React.createElement("div",{style:{padding:16,background:"#F8FAFC",borderRadius:10}},
-            React.createElement("div",{style:{fontSize:12,color:"#64748B",marginBottom:4}},"Weekly Net Margin"),
-            React.createElement("div",{style:{fontSize:24,fontWeight:700,color:"#6366F1"}},"~"+fmt(9000-WEEKLY_TEAM_COST)),
-            React.createElement("div",{style:{fontSize:11,color:"#94A3B8"}},Math.round((9000-WEEKLY_TEAM_COST)/9000*100)+"% margin")
-          )
-        )
-      )
-    ),
+        // 1) Update DB status
+        const ok = await updateProject(project.id, { status: newStatus });
+        if (!ok) return;
+        toast(`Status updated: ${project.client} → ${newStatus}`);
 
-    // CAPACITY TAB
-    tab==="capacity" && React.createElement("div",null,
-      React.createElement("div",{style:{display:"flex",gap:16,flexWrap:"wrap",marginBottom:24}},
-        React.createElement(CapacityCard,{name:"GK + Shika",role:"Senior Team (Primary)",projects,maxProjects:15,weeklyCost:2200,speed:"~1 project/day",note:"Laser focused on HS delivery. 12-15hr days. Rarely make excuses."}),
-        React.createElement(CapacityCard,{name:"Suman",role:"Dev / Implementer (FT)",projects,maxProjects:4,weeklyCost:600,speed:"1-3/wk + adhoc",note:"Also handles BranchLead dev work + training new teams. Growing fast."}),
-        React.createElement(CapacityCard,{name:"Puja (Overflow)",role:"External (Emergency)",projects,maxProjects:4,weeklyCost:0,speed:"Variable",note:"Expensive. Emergency only. Phasing out."})
-      ),
-      React.createElement("div",{style:{background:"#fff",borderRadius:12,padding:24,boxShadow:"0 1px 3px rgba(0,0,0,0.06)"}},
-        React.createElement("h2",{style:{fontSize:18,fontWeight:700,margin:"0 0 16px"}},"Assignment Map"),
-        React.createElement("table",null,
-          React.createElement("thead",null,
-            React.createElement("tr",{style:{borderBottom:"2px solid #E2E8F0"}},
-              ...["Project","Team","Status","Progress","TCV"].map(h=>
-                React.createElement("th",{key:h,style:{padding:"8px 14px",textAlign:"left",fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase"}},h)
-              )
-            )
-          ),
-          React.createElement("tbody",null,
-            ...projects.filter(p=>p.assignedTeam&&p.status!=="delivered").sort((a,b)=>a.assignedTeam.localeCompare(b.assignedTeam)).map(p=>
-              React.createElement("tr",{key:p.id,style:{borderBottom:"1px solid #F1F5F9"}},
-                React.createElement("td",{style:{padding:"8px 14px",fontSize:13,fontWeight:500}},p.client),
-                React.createElement("td",{style:{padding:"8px 14px",fontSize:13}},p.assignedTeam),
-                React.createElement("td",{style:{padding:"8px 14px"}},React.createElement(StatusBadge,{status:p.status})),
-                React.createElement("td",{style:{padding:"8px 14px",minWidth:90}},
-                  React.createElement("div",{style:{display:"flex",alignItems:"center",gap:6}},
-                    React.createElement(ProgressBar,{value:p.lldProgress}),
-                    React.createElement("span",{style:{fontSize:11,fontWeight:600,color:"#64748B"}},p.lldProgress+"%")
-                  )
-                ),
-                React.createElement("td",{style:{padding:"8px 14px",fontSize:13,fontWeight:600}},fmt(p.tcv))
-              )
-            ),
-            ...projects.filter(p=>!p.assignedTeam&&p.status!=="delivered"&&p.status!=="pipeline").map(p=>
-              React.createElement("tr",{key:p.id,style:{borderBottom:"1px solid #F1F5F9",background:"#FEF2F2"}},
-                React.createElement("td",{style:{padding:"8px 14px",fontSize:13,fontWeight:500}},p.client),
-                React.createElement("td",{style:{padding:"8px 14px",fontSize:13,color:"#DC2626",fontWeight:600}},"Unassigned"),
-                React.createElement("td",{style:{padding:"8px 14px"}},React.createElement(StatusBadge,{status:p.status})),
-                React.createElement("td",{style:{padding:"8px 14px"}},"—"),
-                React.createElement("td",{style:{padding:"8px 14px",fontSize:13,fontWeight:600}},fmt(p.tcv))
-              )
-            )
-          )
-        )
-      )
-    ),
+        // 2) If moved into in_progress: auto-create Slack channel + post handoff + write channel_id
+        if (newStatus === "in_progress" && oldStatus !== "in_progress") {
+          try {
+            toast("Creating Slack channel + posting handoff...");
+            const res = await fetch(`${cfg.url}/functions/v1/${cfg.slackHandoffFn}`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${cfg.anonKey}`,
+              },
+              body: JSON.stringify({ project_id: project.id })
+            });
+            const out = await res.json();
+            if (!out.ok && out.error) {
+              toast("Slack handoff failed: " + out.error, true);
+            } else {
+              toast("Slack handoff done ✅");
+              // refresh
+              loadAll();
+            }
+          } catch (e) {
+            toast("Slack handoff failed: " + (e?.message || "unknown"), true);
+          }
+        }
+      }
 
-    // Footer
-    React.createElement("div",{style:{marginTop:20,padding:14,background:"#EEF2FF",borderRadius:10,fontSize:12,color:"#4338CA"}},
-      React.createElement("strong",null,"v2 — Interactive Prototype"),
-      " · Click rows to expand. Use action buttons to progress projects through the lifecycle. Data is sample — next step is connecting to your real sheet."
-    )
-  );
-}
+      async function handleProgressChange(project, newVal) {
+        const n = Math.max(0, Math.min(100, Number(newVal)));
+        await updateProject(project.id, { lld_progress: n });
+      }
 
-ReactDOM.render(React.createElement(Dashboard), document.getElementById("root"));
-</script>
+      function slackLink(channelIdOrName) {
+        if (!channelIdOrName) return null;
+        // If you store channel IDs (C...), app_redirect works well:
+        if (channelIdOrName.startsWith("C")) {
+          return `https://slack.com/app_redirect?channel=${channelIdOrName}`;
+        }
+        // otherwise just show raw
+        return null;
+      }
+
+      // ----------------------------------------------------------------
+      // UI
+      // ----------------------------------------------------------------
+      return (
+        <div className="wrap">
+          <div className="topbar">
+            <div className="brand">
+              <div style={{fontWeight: 900, fontSize: 18}}>MSS Ops Command Center</div>
+              <span className="badge">{role === "admin" ? "Admin" : "Team"}</span>
+              <span className="pill mono">{me?.email}</span>
+            </div>
+            <div className="row" style={{justifyContent:"flex-end"}}>
+              <button className="btn" onClick={loadAll}>Refresh</button>
+              <button className="btn danger" onClick={onLogout}>Logout</button>
+            </div>
+          </div>
+
+          {role === "admin" && revenue && (
+            <div className="row" style={{marginBottom: 12}}>
+              <div className="card kpi">
+                <h3>Total TCV</h3>
+                <div className="v">{money(revenue.tcv, "AUD")}</div>
+                <div className="s">All projects in system</div>
+              </div>
+              <div className="card kpi">
+                <h3>Nick Cut</h3>
+                <div className="v">{money(revenue.nickCut, "AUD")}</div>
+                <div className="s">TCV × nick_percentage</div>
+              </div>
+              <div className="card kpi">
+                <h3>Collected</h3>
+                <div className="v">{money(revenue.collected, "AUD")}</div>
+                <div className="s">Paid (upfront + delivery)</div>
+              </div>
+              <div className="card kpi">
+                <h3>Outstanding</h3>
+                <div className="v">{money(revenue.outstanding, "AUD")}</div>
+                <div className="s">Not yet paid</div>
+              </div>
+            </div>
+          )}
+
+          <div className="tabs" style={{marginBottom: 12}}>
+            <div className={"tab " + (tab==="projects" ? "active": "")} onClick={()=>setTab("projects")}>Projects</div>
+            {role==="admin" && <div className={"tab " + (tab==="capacity" ? "active": "")} onClick={()=>setTab("capacity")}>Capacity</div>}
+            <div className={"tab " + (tab==="activity" ? "active": "")} onClick={()=>setTab("activity")}>Activity Log</div>
+            <div className={"tab " + (tab==="settings" ? "active": "")} onClick={()=>setTab("settings")}>Settings</div>
+          </div>
+
+          {loading && <div className="card">Loading…</div>}
+
+          {!loading && tab === "projects" && (
+            <div className="card">
+              <div className="topbar">
+                <div>
+                  <div style={{fontWeight: 900}}>Projects</div>
+                  <div className="muted">Change status to <span className="mono">in_progress</span> to auto-create Slack channel + post handoff.</div>
+                </div>
+              </div>
+
+              <div style={{overflowX:"auto"}}>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Client / Project</th>
+                      <th>Status</th>
+                      <th>Team</th>
+                      <th>LLD %</th>
+                      {role==="admin" && <th className="right">Nick Cut</th>}
+                      <th>Slack</th>
+                      <th>Dates</th>
+                      <th>Docs</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {projects.map(p => {
+                      const pct = Number(p.nick_percentage || 0.25);
+                      const nickCut = Number(p.tcv || 0) * pct;
+
+                      return (
+                        <tr key={p.id}>
+                          <td className="mono">{p.id}</td>
+                          <td>
+                            <div style={{fontWeight:800}}>{p.client}</div>
+                            <div className="muted">{p.name}</div>
+                          </td>
+                          <td>
+                            <div style={{display:"grid", gap:8}}>
+                              <span className={"pill " + p.status}>{p.status}</span>
+                              {role==="admin" ? (
+                                <select className="input" style={{padding:"8px 10px"}} value={p.status}
+                                  onChange={(e)=>handleStatusChange(p, e.target.value)}>
+                                  <option value="pipeline">pipeline</option>
+                                  <option value="setup">setup</option>
+                                  <option value="in_progress">in_progress</option>
+                                  <option value="delivered">delivered</option>
+                                  <option value="closed">closed</option>
+                                </select>
+                              ) : (
+                                <div className="muted">—</div>
+                              )}
+                            </div>
+                          </td>
+                          <td>{p.assigned_team_name || <span className="muted">Unassigned</span>}</td>
+                          <td style={{minWidth:160}}>
+                            <div style={{display:"grid", gap:8}}>
+                              <div className="mono">{Number(p.lld_progress || 0)}%</div>
+                              {role==="admin" ? (
+                                <input className="input" type="number" min="0" max="100" value={Number(p.lld_progress || 0)}
+                                  onChange={(e)=>handleProgressChange(p, e.target.value)} />
+                              ) : (
+                                <div className="muted">—</div>
+                              )}
+                            </div>
+                          </td>
+                          {role==="admin" && <td className="right">{money(nickCut, "AUD")}</td>}
+                          <td style={{minWidth:150}}>
+                            {p.slack_channel ? (
+                              slackLink(p.slack_channel)
+                                ? <a className="pill mono" href={slackLink(p.slack_channel)} target="_blank" rel="noreferrer">Open</a>
+                                : <span className="pill mono">{p.slack_channel}</span>
+                            ) : <span className="muted">—</span>}
+                          </td>
+                          <td style={{minWidth:160}}>
+                            <div className="muted">
+                              {p.kickoff_date ? <>Kickoff: <span className="mono">{p.kickoff_date}</span><br/></> : null}
+                              {p.delivery_date ? <>Delivery: <span className="mono">{p.delivery_date}</span></> : null}
+                            </div>
+                          </td>
+                          <td style={{minWidth:220}}>
+                            <div className="muted" style={{display:"grid", gap:6}}>
+                              {p.drive_folder && <a href={p.drive_folder} target="_blank" rel="noreferrer">Drive</a>}
+                              {p.hld_link && <a href={p.hld_link} target="_blank" rel="noreferrer">HLD</a>}
+                              {p.lld_link && <a href={p.lld_link} target="_blank" rel="noreferrer">LLD</a>}
+                              {p.xlsx_tracker_link && <a href={p.xlsx_tracker_link} target="_blank" rel="noreferrer">Tracker</a>}
+                              {!p.drive_folder && !p.hld_link && !p.lld_link && !p.xlsx_tracker_link && <span className="muted">—</span>}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {projects.length === 0 && (
+                      <tr><td colSpan={9} className="muted">No projects found (check RLS / login).</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {!loading && tab === "capacity" && role==="admin" && (
+            <div className="card">
+              <div className="topbar">
+                <div>
+                  <div style={{fontWeight:900}}>Capacity</div>
+                  <div className="muted">From <span className="mono">capacity_overview</span> view.</div>
+                </div>
+              </div>
+
+              <div style={{overflowX:"auto"}}>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Team member</th>
+                      <th>Role</th>
+                      <th className="right">Weekly cost</th>
+                      <th className="right">Max projects</th>
+                      <th className="right">Active</th>
+                      <th className="right">Available</th>
+                      <th className="right">Utilization</th>
+                      <th>Speed note</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {capacity.map(c => (
+                      <tr key={c.id}>
+                        <td style={{fontWeight:800}}>{c.full_name}</td>
+                        <td><span className="pill">{c.role}</span></td>
+                        <td className="right">{money(c.weekly_cost || 0, "AUD")}</td>
+                        <td className="right mono">{c.max_projects}</td>
+                        <td className="right mono">{c.active_projects}</td>
+                        <td className="right mono">{c.available_slots}</td>
+                        <td className="right mono">{c.utilization_pct ?? 0}%</td>
+                        <td className="muted">{c.speed_note || "—"}</td>
+                      </tr>
+                    ))}
+                    {capacity.length === 0 && (
+                      <tr><td colSpan={8} className="muted">No capacity rows (check view + RLS).</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {!loading && tab === "activity" && (
+            <div className="card">
+              <div className="topbar">
+                <div>
+                  <div style={{fontWeight:900}}>Activity Log</div>
+                  <div className="muted">Latest 60 events from <span className="mono">activity_log</span>.</div>
+                </div>
+              </div>
+
+              <div style={{overflowX:"auto"}}>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Time</th>
+                      <th>Project</th>
+                      <th>Action</th>
+                      <th>Old → New</th>
+                      <th>Actor</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {activity.map(a => (
+                      <tr key={a.id}>
+                        <td className="mono">{new Date(a.created_at).toLocaleString()}</td>
+                        <td className="mono">#{a.project_id}</td>
+                        <td><span className="pill">{a.action}</span></td>
+                        <td className="mono">{(a.old_value ?? "—")} → {(a.new_value ?? "—")}</td>
+                        <td className="muted">{a.actor || "system"}</td>
+                      </tr>
+                    ))}
+                    {activity.length === 0 && (
+                      <tr><td colSpan={5} className="muted">No activity yet.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {!loading && tab === "settings" && (
+            <div className="card">
+              <div style={{fontWeight:900}}>Settings</div>
+              <div className="muted" style={{marginTop: 6}}>
+                Config is stored in your browser. Use this if you ever change project keys.
+              </div>
+
+              <div className="grid2" style={{marginTop: 12}}>
+                <div>
+                  <div className="muted">Supabase URL</div>
+                  <div className="pill mono" style={{display:"block"}}>{cfg.url}</div>
+                </div>
+                <div>
+                  <div className="muted">Slack handoff function</div>
+                  <div className="pill mono" style={{display:"block"}}>{cfg.slackHandoffFn}</div>
+                </div>
+              </div>
+
+              <div className="row" style={{marginTop: 12}}>
+                <button className="btn" onClick={() => { localStorage.removeItem(CONFIG_KEY); location.reload(); }}>
+                  Reset config
+                </button>
+              </div>
+
+              <div className="muted" style={{marginTop: 14}}>
+                <b>Next improvements:</b> add a Work Session timer table (start/stop) to track how long team is actively building each project.
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ------------------------------------------------------------------
+    // 5) App wrapper
+    // ------------------------------------------------------------------
+    function App() {
+      const [cfg, setCfg] = useState(loadConfig());
+      const [sb, setSb] = useState(null);
+
+      const [session, setSession] = useState(null);
+      const [me, setMe] = useState(null);
+      const [role, setRole] = useState("team");
+      const [toastMsg, setToastMsg] = useState(null);
+      const [toastErr, setToastErr] = useState(false);
+
+      function toast(msg, isErr=false) {
+        setToastMsg(msg);
+        setToastErr(isErr);
+        setTimeout(() => setToastMsg(null), 3200);
+      }
+
+      useEffect(() => {
+        // build supabase client
+        const next = createSb(cfg);
+        setSb(next);
+
+        // session tracking
+        next.auth.getSession().then(({ data }) => {
+          if (data?.session) setSession(data.session);
+        });
+
+        const { data: sub } = next.auth.onAuthStateChange((_event, sess) => {
+          setSession(sess);
+        });
+
+        return () => { sub?.subscription?.unsubscribe?.(); };
+      }, [cfg.url, cfg.anonKey]);
+
+      useEffect(() => {
+        if (!sb || !session) return;
+
+        const user = session.user;
+        setMe(user);
+
+        // Determine role from team_members table
+        (async () => {
+          const { data, error } = await sb
+            .from("team_members")
+            .select("role,full_name")
+            .eq("user_id", user.id)
+            .maybeSingle();
+
+          if (error) {
+            toast("Role lookup failed: " + error.message, true);
+            setRole("team");
+            return;
+          }
+          setRole(data?.role || "team");
+        })();
+      }, [sb, session]);
+
+      async function logout() {
+        if (!sb) return;
+        await sb.auth.signOut();
+        setSession(null);
+        setMe(null);
+      }
+
+      // If anon key not set, show config modal
+      const needsConfig = !cfg.url || !cfg.anonKey || cfg.anonKey.includes("PASTE_ANON_KEY_HERE");
+
+      if (needsConfig) {
+        return (
+          <ConfigModal
+            initial={cfg}
+            onSave={(nextCfg) => {
+              saveConfig(nextCfg);
+              setCfg(nextCfg);
+            }}
+          />
+        );
+      }
+
+      if (!sb) return <div className="wrap"><div className="card">Initializing…</div></div>;
+      if (!session) return <AuthScreen sb={sb} onLogin={setSession} />;
+
+      return (
+        <>
+          <Dashboard sb={sb} cfg={cfg} me={me} role={role} onLogout={logout} toast={toast} />
+          {toastMsg && (
+            <div className="toast" style={{background: toastErr ? "#991b1b" : "#0f172a"}}>
+              {toastMsg}
+            </div>
+          )}
+        </>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
 </body>
 </html>
