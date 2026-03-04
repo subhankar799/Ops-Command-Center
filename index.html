@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -14,58 +15,254 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
   <style>
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
       background: #f7f8fb;
       color: #0f172a;
     }
-    a { color: inherit; }
-    .wrap { max-width: 1180px; margin: 0 auto; padding: 18px; }
+
+    a {
+      color: inherit;
+    }
+
+    .wrap {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 18px;
+    }
+
     .card {
       background: white;
       border-radius: 14px;
       padding: 16px;
-      box-shadow: 0 10px 25px rgba(15,23,42,0.06);
-      border: 1px solid rgba(15,23,42,0.08);
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.06);
+      border: 1px solid rgba(15, 23, 42, 0.08);
     }
-    .row { display:flex; gap: 12px; flex-wrap: wrap; }
-    .kpi { flex: 1 1 240px; }
-    .kpi h3 { margin: 0 0 6px; font-size: 12px; font-weight: 700; color:#64748b; text-transform: uppercase; letter-spacing: .06em; }
-    .kpi .v { font-size: 26px; font-weight: 800; }
-    .kpi .s { margin-top: 6px; font-size: 12px; color:#64748b; }
-    .topbar { display:flex; justify-content: space-between; align-items:center; margin-bottom: 14px; }
-    .brand { display:flex; gap:10px; align-items:center; }
-    .badge { font-size: 12px; padding: 3px 8px; border-radius: 999px; background:#eef2ff; color:#3730a3; border: 1px solid rgba(55,48,163,.18); }
-    .tabs { display:flex; gap:8px; flex-wrap: wrap; }
-    .tab { cursor:pointer; font-size: 13px; padding: 8px 12px; border-radius: 10px; border:1px solid rgba(15,23,42,.12); background:white; }
-    .tab.active { background:#0f172a; color:white; border-color:#0f172a; }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { text-align:left; padding: 10px 10px; border-bottom: 1px solid rgba(15,23,42,.08); font-size: 13px; vertical-align: top; }
-    th { font-size: 12px; color:#64748b; text-transform: uppercase; letter-spacing: .06em; }
-    .pill { font-size: 12px; padding: 4px 10px; border-radius: 999px; border:1px solid rgba(15,23,42,.12); display:inline-block; background:#fff; }
-    .pill.pipeline { background:#f1f5f9; }
-    .pill.setup { background:#fff7ed; border-color: rgba(234,88,12,.25); }
-    .pill.in_progress { background:#ecfeff; border-color: rgba(6,182,212,.25); }
-    .pill.delivered { background:#f0fdf4; border-color: rgba(34,197,94,.25); }
-    .pill.closed { background:#fef2f2; border-color: rgba(239,68,68,.25); }
-    .btn { cursor:pointer; border:1px solid rgba(15,23,42,.14); background:#fff; padding:8px 10px; border-radius:10px; font-size: 13px; }
-    .btn.primary { background:#0f172a; color:white; border-color:#0f172a; }
-    .btn.danger { background:#fee2e2; border-color: rgba(239,68,68,.25); color:#991b1b; }
-    .input { width: 100%; padding: 10px 12px; border-radius: 10px; border:1px solid rgba(15,23,42,.18); font-size: 14px; }
-    .muted { color:#64748b; font-size: 12px; }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 12px; }
-    .right { text-align:right; }
-    .grid2 { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    @media (max-width: 900px){ .grid2 { grid-template-columns: 1fr; } }
-    .toast { position: fixed; right: 18px; bottom: 18px; background:#0f172a; color:white; padding: 12px 14px; border-radius: 12px; box-shadow: 0 14px 30px rgba(15,23,42,.25); max-width: 420px; }
-    .modal-back { position:fixed; inset:0; background: rgba(15,23,42,.55); display:flex; align-items:center; justify-content:center; padding: 18px; }
-    .modal { width: min(560px, 100%); }
-    .split { display:flex; gap:12px; }
-    .split > div { flex:1; }
+
+    .row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .kpi {
+      flex: 1 1 240px;
+    }
+
+    .kpi h3 {
+      margin: 0 0 6px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .kpi .v {
+      font-size: 26px;
+      font-weight: 800;
+    }
+
+    .kpi .s {
+      margin-top: 6px;
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .brand {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .badge {
+      font-size: 12px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: #3730a3;
+      border: 1px solid rgba(55, 48, 163, .18);
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .tab {
+      cursor: pointer;
+      font-size: 13px;
+      padding: 8px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(15, 23, 42, .12);
+      background: white;
+    }
+
+    .tab.active {
+      background: #0f172a;
+      color: white;
+      border-color: #0f172a;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: 10px 10px;
+      border-bottom: 1px solid rgba(15, 23, 42, .08);
+      font-size: 13px;
+      vertical-align: top;
+    }
+
+    th {
+      font-size: 12px;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .pill {
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(15, 23, 42, .12);
+      display: inline-block;
+      background: #fff;
+    }
+
+    .pill.pipeline {
+      background: #f1f5f9;
+    }
+
+    .pill.setup {
+      background: #fff7ed;
+      border-color: rgba(234, 88, 12, .25);
+    }
+
+    .pill.in_progress {
+      background: #ecfeff;
+      border-color: rgba(6, 182, 212, .25);
+    }
+
+    .pill.delivered {
+      background: #f0fdf4;
+      border-color: rgba(34, 197, 94, .25);
+    }
+
+    .pill.closed {
+      background: #fef2f2;
+      border-color: rgba(239, 68, 68, .25);
+    }
+
+    .btn {
+      cursor: pointer;
+      border: 1px solid rgba(15, 23, 42, .14);
+      background: #fff;
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-size: 13px;
+    }
+
+    .btn.primary {
+      background: #0f172a;
+      color: white;
+      border-color: #0f172a;
+    }
+
+    .btn.danger {
+      background: #fee2e2;
+      border-color: rgba(239, 68, 68, .25);
+      color: #991b1b;
+    }
+
+    .input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(15, 23, 42, .18);
+      font-size: 14px;
+    }
+
+    .muted {
+      color: #64748b;
+      font-size: 12px;
+    }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 12px;
+    }
+
+    .right {
+      text-align: right;
+    }
+
+    .grid2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    @media (max-width: 900px) {
+      .grid2 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      background: #0f172a;
+      color: white;
+      padding: 12px 14px;
+      border-radius: 12px;
+      box-shadow: 0 14px 30px rgba(15, 23, 42, .25);
+      max-width: 420px;
+    }
+
+    .modal-back {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, .55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+    }
+
+    .modal {
+      width: min(560px, 100%);
+    }
+
+    .split {
+      display: flex;
+      gap: 12px;
+    }
+
+    .split>div {
+      flex: 1;
+    }
   </style>
 </head>
+
 <body>
   <div id="root"></div>
 
@@ -87,7 +284,7 @@
       try {
         const raw = localStorage.getItem(CONFIG_KEY);
         if (raw) return JSON.parse(raw);
-      } catch (e) {}
+      } catch (e) { }
       return {
         url: DEFAULT_SUPABASE_URL,
         anonKey: DEFAULT_SUPABASE_ANON_KEY,
@@ -104,7 +301,7 @@
       return createClient(cfg.url, cfg.anonKey);
     }
 
-    function money(n, currency="AUD") {
+    function money(n, currency = "AUD") {
       try {
         return new Intl.NumberFormat(undefined, { style: "currency", currency }).format(Number(n || 0));
       } catch (e) {
@@ -118,7 +315,7 @@
       const d2 = new Date(b);
       const ms = d2 - d1;
       if (Number.isNaN(ms)) return null;
-      return Math.round(ms / (1000*60*60*24));
+      return Math.round(ms / (1000 * 60 * 60 * 24));
     }
 
     // ------------------------------------------------------------------
@@ -136,30 +333,30 @@
           <div className="card modal">
             <div className="topbar">
               <div className="brand">
-                <div style={{fontWeight:900, fontSize:16}}>MSS Ops Command Center</div>
+                <div style={{ fontWeight: 900, fontSize: 16 }}>MSS Ops Command Center</div>
                 <span className="badge">Config</span>
               </div>
             </div>
-            <p className="muted" style={{marginTop:0}}>
+            <p className="muted" style={{ marginTop: 0 }}>
               This dashboard is a static HTML app. Add your Supabase URL + anon key once; we store it in your browser (localStorage).
               The anon key is safe for frontend because Row Level Security protects your data.
             </p>
 
-            <div style={{display:"grid", gap:10}}>
+            <div style={{ display: "grid", gap: 10 }}>
               <div>
                 <div className="muted">Supabase URL</div>
-                <input className="input" value={url} onChange={(e)=>setUrl(e.target.value)} placeholder="https://xxxx.supabase.co" />
+                <input className="input" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://xxxx.supabase.co" />
               </div>
               <div>
                 <div className="muted">Supabase anon public key</div>
-                <input className="input mono" value={anonKey} onChange={(e)=>setAnonKey(e.target.value)} placeholder="eyJhbGciOi..." />
+                <input className="input mono" value={anonKey} onChange={(e) => setAnonKey(e.target.value)} placeholder="eyJhbGciOi..." />
               </div>
               <div>
                 <div className="muted">Slack handoff Edge Function name</div>
-                <input className="input" value={slackHandoffFn} onChange={(e)=>setSlackHandoffFn(e.target.value)} placeholder="slack-channel-handoff" />
+                <input className="input" value={slackHandoffFn} onChange={(e) => setSlackHandoffFn(e.target.value)} placeholder="slack-channel-handoff" />
               </div>
-              <div className="row" style={{justifyContent:"flex-end"}}>
-                <button className="btn primary" disabled={invalid} onClick={()=>onSave({ url, anonKey, slackHandoffFn })}>
+              <div className="row" style={{ justifyContent: "flex-end" }}>
+                <button className="btn primary" disabled={invalid} onClick={() => onSave({ url, anonKey, slackHandoffFn })}>
                   Save & Continue
                 </button>
               </div>
@@ -189,23 +386,23 @@
       }
 
       return (
-        <div className="wrap" style={{paddingTop: 54}}>
-          <div className="card" style={{maxWidth: 520, margin:"0 auto"}}>
-            <div style={{fontWeight: 900, fontSize: 18}}>Sign in</div>
-            <div className="muted" style={{marginTop: 6}}>
+        <div className="wrap" style={{ paddingTop: 54 }}>
+          <div className="card" style={{ maxWidth: 520, margin: "0 auto" }}>
+            <div style={{ fontWeight: 900, fontSize: 18 }}>Sign in</div>
+            <div className="muted" style={{ marginTop: 6 }}>
               Use the Supabase Auth user you created (e.g., Nick).
             </div>
 
-            <div style={{display:"grid", gap: 10, marginTop: 14}}>
+            <div style={{ display: "grid", gap: 10, marginTop: 14 }}>
               <div>
                 <div className="muted">Email</div>
-                <input className="input" value={email} onChange={(e)=>setEmail(e.target.value)} placeholder="nick@..." />
+                <input className="input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="nick@..." />
               </div>
               <div>
                 <div className="muted">Password</div>
-                <input className="input" type="password" value={password} onChange={(e)=>setPassword(e.target.value)} placeholder="••••••••" />
+                <input className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
               </div>
-              {err && <div className="pill" style={{borderColor:"rgba(239,68,68,.35)", background:"#fef2f2", color:"#991b1b"}}>{err}</div>}
+              {err && <div className="pill" style={{ borderColor: "rgba(239,68,68,.35)", background: "#fef2f2", color: "#991b1b" }}>{err}</div>}
               <button className={"btn primary"} onClick={signIn} disabled={loading || !email || !password}>
                 {loading ? "Signing in..." : "Sign in"}
               </button>
@@ -302,6 +499,25 @@
         return { tcv, nickCut, collected, outstanding };
       }, [projects, role]);
 
+      const activeProjectsCount = useMemo(() => {
+        if (role !== "admin") return 0;
+        return (projects || []).filter(p => ["setup", "in_progress"].includes(p.status)).length;
+      }, [projects, role]);
+
+      const capacitySummary = useMemo(() => {
+        if (role !== "admin") return null;
+        const rows = capacity || [];
+        if (!rows.length) return { totalSlots: 0, active: 0, available: 0, utilizationPct: 0 };
+
+        const totalSlots = rows.reduce((sum, r) => sum + (Number(r.max_projects) || 0), 0);
+        const active = rows.reduce((sum, r) => sum + (Number(r.active_projects) || 0), 0);
+        const available = rows.reduce((sum, r) => sum + (Number(r.available_slots) || 0), 0);
+
+        const utilizationPct = totalSlots > 0 ? Math.round((active / totalSlots) * 100) : 0;
+
+        return { totalSlots, active, available, utilizationPct };
+      }, [capacity, role]);
+
       // ----------------------------------------------------------------
       // Actions
       // ----------------------------------------------------------------
@@ -371,18 +587,18 @@
         <div className="wrap">
           <div className="topbar">
             <div className="brand">
-              <div style={{fontWeight: 900, fontSize: 18}}>MSS Ops Command Center</div>
+              <div style={{ fontWeight: 900, fontSize: 18 }}>MSS Ops Command Center</div>
               <span className="badge">{role === "admin" ? "Admin" : "Team"}</span>
               <span className="pill mono">{me?.email}</span>
             </div>
-            <div className="row" style={{justifyContent:"flex-end"}}>
+            <div className="row" style={{ justifyContent: "flex-end" }}>
               <button className="btn" onClick={loadAll}>Refresh</button>
               <button className="btn danger" onClick={onLogout}>Logout</button>
             </div>
           </div>
 
           {role === "admin" && revenue && (
-            <div className="row" style={{marginBottom: 12}}>
+            <div className="row" style={{ marginBottom: 12 }}>
               <div className="card kpi">
                 <h3>Total TCV</h3>
                 <div className="v">{money(revenue.tcv, "AUD")}</div>
@@ -403,14 +619,29 @@
                 <div className="v">{money(revenue.outstanding, "AUD")}</div>
                 <div className="s">Not yet paid</div>
               </div>
+              <div className="card kpi">
+                <h3>Active Projects</h3>
+                <div className="v">{activeProjectsCount}</div>
+                <div className="s">Setup + In Progress</div>
+              </div>
+
+              <div className="card kpi">
+                <h3>Capacity Utilization</h3>
+                <div className="v">{capacitySummary ? `${capacitySummary.utilizationPct}%` : "—"}</div>
+                <div className="s">
+                  {capacitySummary
+                    ? `${capacitySummary.active}/${capacitySummary.totalSlots} slots used • ${capacitySummary.available} available`
+                    : "Loading..."}
+                </div>
+              </div>
             </div>
           )}
 
-          <div className="tabs" style={{marginBottom: 12}}>
-            <div className={"tab " + (tab==="projects" ? "active": "")} onClick={()=>setTab("projects")}>Projects</div>
-            {role==="admin" && <div className={"tab " + (tab==="capacity" ? "active": "")} onClick={()=>setTab("capacity")}>Capacity</div>}
-            <div className={"tab " + (tab==="activity" ? "active": "")} onClick={()=>setTab("activity")}>Activity Log</div>
-            <div className={"tab " + (tab==="settings" ? "active": "")} onClick={()=>setTab("settings")}>Settings</div>
+          <div className="tabs" style={{ marginBottom: 12 }}>
+            <div className={"tab " + (tab === "projects" ? "active" : "")} onClick={() => setTab("projects")}>Projects</div>
+            {role === "admin" && <div className={"tab " + (tab === "capacity" ? "active" : "")} onClick={() => setTab("capacity")}>Capacity</div>}
+            <div className={"tab " + (tab === "activity" ? "active" : "")} onClick={() => setTab("activity")}>Activity Log</div>
+            <div className={"tab " + (tab === "settings" ? "active" : "")} onClick={() => setTab("settings")}>Settings</div>
           </div>
 
           {loading && <div className="card">Loading…</div>}
@@ -419,12 +650,12 @@
             <div className="card">
               <div className="topbar">
                 <div>
-                  <div style={{fontWeight: 900}}>Projects</div>
+                  <div style={{ fontWeight: 900 }}>Projects</div>
                   <div className="muted">Change status to <span className="mono">in_progress</span> to auto-create Slack channel + post handoff.</div>
                 </div>
               </div>
 
-              <div style={{overflowX:"auto"}}>
+              <div style={{ overflowX: "auto" }}>
                 <table>
                   <thead>
                     <tr>
@@ -433,7 +664,7 @@
                       <th>Status</th>
                       <th>Team</th>
                       <th>LLD %</th>
-                      {role==="admin" && <th className="right">Nick Cut</th>}
+                      {role === "admin" && <th className="right">Nick Cut</th>}
                       <th>Slack</th>
                       <th>Dates</th>
                       <th>Docs</th>
@@ -448,15 +679,15 @@
                         <tr key={p.id}>
                           <td className="mono">{p.id}</td>
                           <td>
-                            <div style={{fontWeight:800}}>{p.client}</div>
+                            <div style={{ fontWeight: 800 }}>{p.client}</div>
                             <div className="muted">{p.name}</div>
                           </td>
                           <td>
-                            <div style={{display:"grid", gap:8}}>
+                            <div style={{ display: "grid", gap: 8 }}>
                               <span className={"pill " + p.status}>{p.status}</span>
-                              {role==="admin" ? (
-                                <select className="input" style={{padding:"8px 10px"}} value={p.status}
-                                  onChange={(e)=>handleStatusChange(p, e.target.value)}>
+                              {role === "admin" ? (
+                                <select className="input" style={{ padding: "8px 10px" }} value={p.status}
+                                  onChange={(e) => handleStatusChange(p, e.target.value)}>
                                   <option value="pipeline">pipeline</option>
                                   <option value="setup">setup</option>
                                   <option value="in_progress">in_progress</option>
@@ -469,33 +700,33 @@
                             </div>
                           </td>
                           <td>{p.assigned_team_name || <span className="muted">Unassigned</span>}</td>
-                          <td style={{minWidth:160}}>
-                            <div style={{display:"grid", gap:8}}>
+                          <td style={{ minWidth: 160 }}>
+                            <div style={{ display: "grid", gap: 8 }}>
                               <div className="mono">{Number(p.lld_progress || 0)}%</div>
-                              {role==="admin" ? (
+                              {role === "admin" ? (
                                 <input className="input" type="number" min="0" max="100" value={Number(p.lld_progress || 0)}
-                                  onChange={(e)=>handleProgressChange(p, e.target.value)} />
+                                  onChange={(e) => handleProgressChange(p, e.target.value)} />
                               ) : (
                                 <div className="muted">—</div>
                               )}
                             </div>
                           </td>
-                          {role==="admin" && <td className="right">{money(nickCut, "AUD")}</td>}
-                          <td style={{minWidth:150}}>
+                          {role === "admin" && <td className="right">{money(nickCut, "AUD")}</td>}
+                          <td style={{ minWidth: 150 }}>
                             {p.slack_channel ? (
                               slackLink(p.slack_channel)
                                 ? <a className="pill mono" href={slackLink(p.slack_channel)} target="_blank" rel="noreferrer">Open</a>
                                 : <span className="pill mono">{p.slack_channel}</span>
                             ) : <span className="muted">—</span>}
                           </td>
-                          <td style={{minWidth:160}}>
+                          <td style={{ minWidth: 160 }}>
                             <div className="muted">
-                              {p.kickoff_date ? <>Kickoff: <span className="mono">{p.kickoff_date}</span><br/></> : null}
+                              {p.kickoff_date ? <>Kickoff: <span className="mono">{p.kickoff_date}</span><br /></> : null}
                               {p.delivery_date ? <>Delivery: <span className="mono">{p.delivery_date}</span></> : null}
                             </div>
                           </td>
-                          <td style={{minWidth:220}}>
-                            <div className="muted" style={{display:"grid", gap:6}}>
+                          <td style={{ minWidth: 220 }}>
+                            <div className="muted" style={{ display: "grid", gap: 6 }}>
                               {p.drive_folder && <a href={p.drive_folder} target="_blank" rel="noreferrer">Drive</a>}
                               {p.hld_link && <a href={p.hld_link} target="_blank" rel="noreferrer">HLD</a>}
                               {p.lld_link && <a href={p.lld_link} target="_blank" rel="noreferrer">LLD</a>}
@@ -515,16 +746,16 @@
             </div>
           )}
 
-          {!loading && tab === "capacity" && role==="admin" && (
+          {!loading && tab === "capacity" && role === "admin" && (
             <div className="card">
               <div className="topbar">
                 <div>
-                  <div style={{fontWeight:900}}>Capacity</div>
+                  <div style={{ fontWeight: 900 }}>Capacity</div>
                   <div className="muted">From <span className="mono">capacity_overview</span> view.</div>
                 </div>
               </div>
 
-              <div style={{overflowX:"auto"}}>
+              <div style={{ overflowX: "auto" }}>
                 <table>
                   <thead>
                     <tr>
@@ -541,7 +772,7 @@
                   <tbody>
                     {capacity.map(c => (
                       <tr key={c.id}>
-                        <td style={{fontWeight:800}}>{c.full_name}</td>
+                        <td style={{ fontWeight: 800 }}>{c.full_name}</td>
                         <td><span className="pill">{c.role}</span></td>
                         <td className="right">{money(c.weekly_cost || 0, "AUD")}</td>
                         <td className="right mono">{c.max_projects}</td>
@@ -564,12 +795,12 @@
             <div className="card">
               <div className="topbar">
                 <div>
-                  <div style={{fontWeight:900}}>Activity Log</div>
+                  <div style={{ fontWeight: 900 }}>Activity Log</div>
                   <div className="muted">Latest 60 events from <span className="mono">activity_log</span>.</div>
                 </div>
               </div>
 
-              <div style={{overflowX:"auto"}}>
+              <div style={{ overflowX: "auto" }}>
                 <table>
                   <thead>
                     <tr>
@@ -601,29 +832,29 @@
 
           {!loading && tab === "settings" && (
             <div className="card">
-              <div style={{fontWeight:900}}>Settings</div>
-              <div className="muted" style={{marginTop: 6}}>
+              <div style={{ fontWeight: 900 }}>Settings</div>
+              <div className="muted" style={{ marginTop: 6 }}>
                 Config is stored in your browser. Use this if you ever change project keys.
               </div>
 
-              <div className="grid2" style={{marginTop: 12}}>
+              <div className="grid2" style={{ marginTop: 12 }}>
                 <div>
                   <div className="muted">Supabase URL</div>
-                  <div className="pill mono" style={{display:"block"}}>{cfg.url}</div>
+                  <div className="pill mono" style={{ display: "block" }}>{cfg.url}</div>
                 </div>
                 <div>
                   <div className="muted">Slack handoff function</div>
-                  <div className="pill mono" style={{display:"block"}}>{cfg.slackHandoffFn}</div>
+                  <div className="pill mono" style={{ display: "block" }}>{cfg.slackHandoffFn}</div>
                 </div>
               </div>
 
-              <div className="row" style={{marginTop: 12}}>
+              <div className="row" style={{ marginTop: 12 }}>
                 <button className="btn" onClick={() => { localStorage.removeItem(CONFIG_KEY); location.reload(); }}>
                   Reset config
                 </button>
               </div>
 
-              <div className="muted" style={{marginTop: 14}}>
+              <div className="muted" style={{ marginTop: 14 }}>
                 <b>Next improvements:</b> add a Work Session timer table (start/stop) to track how long team is actively building each project.
               </div>
             </div>
@@ -645,7 +876,7 @@
       const [toastMsg, setToastMsg] = useState(null);
       const [toastErr, setToastErr] = useState(false);
 
-      function toast(msg, isErr=false) {
+      function toast(msg, isErr = false) {
         setToastMsg(msg);
         setToastErr(isErr);
         setTimeout(() => setToastMsg(null), 3200);
@@ -720,7 +951,7 @@
         <>
           <Dashboard sb={sb} cfg={cfg} me={me} role={role} onLogout={logout} toast={toast} />
           {toastMsg && (
-            <div className="toast" style={{background: toastErr ? "#991b1b" : "#0f172a"}}>
+            <div className="toast" style={{ background: toastErr ? "#991b1b" : "#0f172a" }}>
               {toastMsg}
             </div>
           )}
@@ -731,4 +962,5 @@
     ReactDOM.createRoot(document.getElementById("root")).render(<App />);
   </script>
 </body>
+
 </html>
